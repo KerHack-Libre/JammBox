@@ -1,0 +1,23 @@
+#JAMMBOX  LANCEMENT AVEC DOSBOX 
+-------------------------------
+
+# Pour avoir les infos sur l'images 
+)> fdisk -x  prince.img  
+
+[sectorbytesize  , sectorsperhead , head ,cylinders] 
+
+# pour le monter l'image directement sur dosbox 
+
+Z:> imgmount c  prince.img -size  512,8,1,384 
+
+
+# POUR INSPECTER La partition FAT16  de l'image  
+1) monter  l'image 'prince.img' sur  dosmnt  
+  )> sudo mount -t fat16  -o  loop,offset=$((8*512))  prince.img  dosmnt 
+2) lancer dosbox  
+  )> dosbox  . 
+
+3) dans dosbox entrer dans dosmnt et lancer priceofpersia.exe 
+------------------------------------------------------------- 
+
+
