@@ -1,0 +1,5 @@
+#!/bin/bash 
+set -o errexit 
+
+
+./build/JammBox games/prince_copy.img 

@@ -29,7 +29,15 @@
 #endif 
 
 
-#define  MBR_BOOTMAGIC ((0x55) | (0xAA << 8)) 
+#define  MBR_BOOTMAGIC ((0x55) | (0xAA << 8))
+
+/**
+ * La representation standard du table de partition du  master boot record. 
+ * Il  contient  4 entre chacun d'eux contenant 16 bytes. 
+ * On peut en deduire que  la totalite du table de partition est de :  (4 x 16) =  64 bytes. 
+ * Voici la structure du secteur de boot 
+ * [boot code  (446) | table de partition [64] | signature du boot (2)]  = 512 bytes ; 
+ * */
 #define  MBR_PARTAB 4 
 
 #define  mbr_err(...) \
@@ -55,7 +63,25 @@ struct __mbr_sector_t {
 }__packed;
 
 
-uint8_t  mbr_sector_has_boot_signature(struct __mbr_sector_t * __restrict__);  
+typedef struct __chs_t  chs_t  ; 
+struct __chs_t 
+{
+   uint16_t  _cylinder; 
+   uint8_t   _head ; 
+   uint8_t   _sector;
+}__packed;   
+
+struct CHS { 
+  struct __chs_t  _start  ;
+  struct __chs_t  _end ; 
+}; 
+
+
+static uint8_t  mbr_sector_has_boot_signature(struct __mbr_sector_t * __restrict__); 
+
+static int mbr_active_partion(struct __partition_table_t * __restrict__) ; 
+
+struct CHS *decode_chsval_bytes_in(struct __partition_table_t *  __restrict__) ; 
 
 
 /* l'utilite de ce main function est de tester */
@@ -106,24 +132,71 @@ int main(int ac , char *const *av)
     goto _eplg ;  
   } 
   
-
-  //! get cylinder size 
-  
-  int i = 0;
-  while(i <3 ) 
+  unsigned int  idx_part = ~0 ; 
+  while(++idx_part <MBR_PARTAB) 
   {
-    printf(" -> %i \012" ,mbr_sector->ptabs[0]._chs_end[i]) ;  
-    i++ ;
-  }
+    if(!mbr_active_partion( (mbr_sector->ptabs+idx_part))) 
+      break ; 
+
+  } 
+  
+  printf("active partition is  :%i \012" , idx_part) ; 
+  printf("-> 0x%x\012" ,mbr_sector->ptabs[idx_part]._boot_indicator) ; 
+  
+  struct  __partition_table_t  * active_partion  =  (mbr_sector->ptabs+idx_part); 
+  
+  //! Starting sector in CHS  value  
+  struct  CHS * chs =decode_chsval_bytes_in(active_partion) ; 
   
 
+
+  free(chs) ; 
 _eplg: 
   return pstatus ; 
 }
 
 
 
-uint8_t  mbr_sector_has_boot_signature(mbr_sector_t* restrict  mbr ) 
+static uint8_t  mbr_sector_has_boot_signature(mbr_sector_t* restrict  mbr ) 
 {
   return (mbr->_boot_sig ^ MBR_BOOTMAGIC) ;  
+}
+
+
+static int mbr_active_partion(struct __partition_table_t * restrict  partition) 
+{
+   int boot_indicator_active_flag =  0x80 ; 
+   
+   return  boot_indicator_active_flag ^ partition->_boot_indicator ; 
+} 
+
+
+struct CHS *decode_chsval_bytes_in(struct __partition_table_t *  restrict active_partition) 
+{
+  uint32_t chs_value=  *(uint32_t *) active_partition->_chs_begin; 
+  chs_value&=0xfffff; 
+  
+  struct CHS *  chs =  malloc(sizeof(*chs)) ; 
+  if(!chs) 
+    return (struct CHS *) 00;  
+  
+  //Starting CHS 
+  chs->_start._cylinder=0 ,  chs->_start._cylinder|=(chs_value >> 0x10)  ; 
+  chs->_start._head    =(chs_value & 0xff) , chs->_start._head-=~0; 
+  chs->_start._sector  =(chs_value >> 8  & 0xff); 
+  
+  //End CHS 
+  
+  chs_value^=chs_value , chs_value= *(uint32_t*) active_partition->_chs_end; 
+  chs_value&=0xfffff; 
+ 
+  /* FIXME */ 
+  chs->_end._cylinder=0 , chs->_end._cylinder|=(chs_value >> 0x10)  ;  
+  chs->_end._head    =(chs_value  & 0xff); 
+  chs->_end._sector  =(chs_value >> 8  & 0xff) ; 
+
+ 
+ 
+  return chs ; 
+
 }
