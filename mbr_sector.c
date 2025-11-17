@@ -187,15 +187,16 @@ struct CHS *decode_chsval_bytes_in(struct __partition_table_t *  restrict active
   
   //End CHS 
   
-  chs_value^=chs_value , chs_value= *(uint32_t*) active_partition->_chs_end; 
-  chs_value&=0xfffff; 
- 
-  /* FIXME */ 
-  chs->_end._cylinder=0 , chs->_end._cylinder|=(chs_value >> 0x10)  ;  
+  chs_value&=~chs_value , chs_value= *(uint32_t*) active_partition->_chs_end & 0xffffff ;    
+
+  chs->_end._cylinder=0 , chs->_end._cylinder|=((chs_value  >> 0x10 )& 0x3ff); 
   chs->_end._head    =(chs_value  & 0xff); 
   chs->_end._sector  =(chs_value >> 8  & 0xff) ; 
-
  
+
+  chs->_end._cylinder |= (chs->_end._sector  & 0xc0)<< 2 ;    
+  chs->_end._sector &= 0x3f ; 
+
  
   return chs ; 
 
