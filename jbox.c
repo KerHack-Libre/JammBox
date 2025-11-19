@@ -9,7 +9,27 @@
 #include <string.h> 
 #include <assert.h> 
 
-#include "diskcheck.h"  
+#include "diskcheck.h" 
+
+
+#define  DOSBOX_CHSBYTES_ORDER(chsbytes) \
+  chsbytes->_sector,chsbytes->_head,chsbytes->_cylinder 
+
+enum DOSBOX_DIRECTIVES { 
+  IMGMOUNT,
+#define  F_IMGMOUNT  "%s%s%s"
+}; 
+
+#define CMDIR(__directive) \
+  #__directive
+
+struct dosbox_entry_t  
+{ 
+  const char *doscmd_directive ; 
+  const char *game_path ;
+  ssize_t byte_sector; 
+  struct __chs_t *end ;
+};  
 
 static int has_dosbox(void) 
 {
@@ -56,9 +76,22 @@ static char * jbox_path_resolve(char  const * dosimg)
   return path ;  
 }
 
+void dosbox_automount(char const  * diskpart , struct dosbox_entry_t * entry) 
+{
+  char *cmd = 0; 
+  asprintf(&cmd , "-c 'IMGMOUNT c %s -size %i,%i,%i,%i' -c 'C:' -c 'START.BAT'", 
+      entry->game_path,
+      entry->byte_sector,
+      DOSBOX_CHSBYTES_ORDER(entry->end)
+      ); 
+
+  printf("%s \n" , cmd ) ; 
+  free(cmd) ; 
+
+}
 
 static int scan_pte(mbr_t *) ;   
-static int jbox_launch_bosbox_emulator(char const * __restrict__, __pte  * __restrict__ ) ; 
+static int jbox_launch_bosbox_emulator(char const * __restrict__, global_chs_t  * __restrict__ ) ; 
 
 int main(int ac , char *const *av , char * const *ev) 
 {
@@ -104,7 +137,7 @@ int main(int ac , char *const *av , char * const *ev)
      goto _eplg ;  
    } 
   
-   jbox_launch_bosbox_emulator(dosimg , active_boot_partition) ;
+   jbox_launch_bosbox_emulator(dosimg ,  chsbytes) ;
   
 _eplg: 
   return pstatus ; 
@@ -113,7 +146,7 @@ _eplg:
 
 static int scan_pte(mbr_t  * mbr)  
 {
-  unsigned int  idx =~0  ,
+  unsigned int  idx =~0 ,
                 missed=~0 ; 
   while(++idx < MBR_PE) 
   {
@@ -132,12 +165,21 @@ static int scan_pte(mbr_t  * mbr)
 return  idx; 
 }
 
-static int jbox_launch_bosbox_emulator(char const * restrict dosimg, __pte  * restrict active_partition) 
+static int jbox_launch_bosbox_emulator(char const * restrict dosimg, global_chs_t   * restrict active_partition) 
 {
   if(!has_dosbox()) 
     return ~0 ; 
   
   char *abs_path= jbox_path_resolve(dosimg) ;  
-  
-  char *doscmd =  jbox_build(abs_path , active_partition) ; 
+  struct dosbox_entry_t data = { 
+     IMGMOUNT,
+     abs_path,
+     0x200, 
+     .end = &active_partition->_end,  
+  }; 
+   
+  dosbox_automount("c" , &data) ;  
+
+  //dosbox_start(AUTO);  
+
 }
