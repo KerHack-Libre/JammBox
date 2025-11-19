@@ -20,7 +20,6 @@ static int has_dosbox(void)
    if(!binloc) 
      return ~0 ;
    
-  
    while((token = strtok(binloc, ":")) ) 
    {
      if(binloc) 
@@ -38,6 +37,25 @@ static int has_dosbox(void)
    return status  ; 
   
 }
+
+static char * jbox_path_resolve(char  const * dosimg)  
+{
+  char *path =(char *)0 ;
+  char *index_start = (char *)dosimg;  
+
+  char * cwd  =  get_current_dir_name(); 
+  int c_start =0 ; memcpy(&c_start , dosimg , 2) , 
+      c_start&=0xffff ; 
+
+  if(!(c_start  ^ 0x2f2e))  
+    index_start+=2; 
+
+  asprintf(&path ,  "%s/%s", cwd , index_start) ; 
+  free(cwd) ; 
+
+  return path ;  
+}
+
 
 static int scan_pte(mbr_t *) ;   
 static int jbox_launch_bosbox_emulator(char const * __restrict__, __pte  * __restrict__ ) ; 
@@ -117,4 +135,9 @@ return  idx;
 static int jbox_launch_bosbox_emulator(char const * restrict dosimg, __pte  * restrict active_partition) 
 {
   if(!has_dosbox()) 
+    return ~0 ; 
+  
+  char *abs_path= jbox_path_resolve(dosimg) ;  
+  
+  char *doscmd =  jbox_build(abs_path , active_partition) ; 
 }
