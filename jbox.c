@@ -1,5 +1,6 @@
 //SPDX-License-Identifier:GPL-3.0 
 
+#define _GNU_SOURCE  
 #include <stdlib.h> 
 #include <stdio.h> 
 #include <unistd.h> 
@@ -10,9 +11,38 @@
 
 #include "diskcheck.h"  
 
-static int scan_pte(mbr_t *) ;   
+static int has_dosbox(void) 
+{
+   char  *binloc = getenv("PATH") , 
+         *token  = 0 , 
+         fullpath[0xff] ={0};  
+   int status  = 0 ; 
+   if(!binloc) 
+     return ~0 ;
+   
+  
+   while((token = strtok(binloc, ":")) ) 
+   {
+     if(binloc) 
+       binloc = 0; 
+     
+     sprintf(fullpath ,  "%s/dosbox", token) ; 
+     if(!access(fullpath , X_OK|F_OK))
+     {
+       status^=1 ; 
+       break ; 
+     }
+     bzero(fullpath  , 0xff) ; 
+   }
+  
+   return status  ; 
+  
+}
 
-int main(int ac , char *const *av)
+static int scan_pte(mbr_t *) ;   
+static int jbox_launch_bosbox_emulator(char const * __restrict__, __pte  * __restrict__ ) ; 
+
+int main(int ac , char *const *av , char * const *ev) 
 {
   unsigned int pstatus= EXIT_SUCCESS ; 
   const char *dosimg= (char*)00, 
@@ -54,8 +84,9 @@ int main(int ac , char *const *av)
    {
      err((pstatus^=1) , "Disk Check fail to decode CHS start and end"); 
      goto _eplg ;  
-   }
-
+   } 
+  
+   jbox_launch_bosbox_emulator(dosimg , active_boot_partition) ;
   
 _eplg: 
   return pstatus ; 
@@ -81,4 +112,9 @@ static int scan_pte(mbr_t  * mbr)
   }
 
 return  idx; 
+}
+
+static int jbox_launch_bosbox_emulator(char const * restrict dosimg, __pte  * restrict active_partition) 
+{
+  if(!has_dosbox()) 
 }
