@@ -8,24 +8,35 @@
 #include <fcntl.h>
 #include <string.h> 
 #include <assert.h> 
+#include <sys/wait.h> 
+#include <sys/types.h> 
 
 #include "diskcheck.h" 
 
+extern char **environ ; 
 
 #define  DOSBOX_CHSBYTES_ORDER(chsbytes) \
   chsbytes->_sector,chsbytes->_head,chsbytes->_cylinder 
 
 enum DOSBOX_DIRECTIVES { 
   IMGMOUNT,
-#define  F_IMGMOUNT  "%s%s%s"
 }; 
+
+#define  FMT_IMGMOUNT\
+  "? %s %c %s -size %i,%i,%i,%i ? %c:" 
+
+#define CMDFMT(__directive)\
+  FMT_##__directive
 
 #define CMDIR(__directive) \
   #__directive
 
+FILE *memrecord=(FILE *)00 ; 
+char *dosbox   =0; 
+
 struct dosbox_entry_t  
 { 
-  const char *doscmd_directive ; 
+  enum DOSBOX_DIRECTIVES doscmd_directive ; 
   const char *game_path ;
   ssize_t byte_sector; 
   struct __chs_t *end ;
@@ -48,12 +59,14 @@ static int has_dosbox(void)
      sprintf(fullpath ,  "%s/dosbox", token) ; 
      if(!access(fullpath , X_OK|F_OK))
      {
+       dosbox =  strdup(fullpath) ;  
        status^=1 ; 
        break ; 
      }
      bzero(fullpath  , 0xff) ; 
    }
-  
+
+   
    return status  ; 
   
 }
@@ -76,17 +89,66 @@ static char * jbox_path_resolve(char  const * dosimg)
   return path ;  
 }
 
-void dosbox_automount(char const  * diskpart , struct dosbox_entry_t * entry) 
+int dosbox_automount(char const  * diskpart , struct dosbox_entry_t * entry) 
 {
-  char *cmd = 0; 
-  asprintf(&cmd , "-c 'IMGMOUNT c %s -size %i,%i,%i,%i' -c 'C:' -c 'START.BAT'", 
-      entry->game_path,
-      entry->byte_sector,
-      DOSBOX_CHSBYTES_ORDER(entry->end)
-      ); 
+  
+  switch(entry->doscmd_directive) 
+  {
+    case IMGMOUNT:
+      fprintf(memrecord , 
+          CMDFMT(IMGMOUNT) , 
+          CMDIR(IMGMOUNT),
+          *diskpart  , entry->game_path ,
+          entry->byte_sector,
+          entry->end->_sector ,
+          entry->end->_head, 
+          entry->end->_cylinder,
+          *diskpart) ; 
+      break ; 
+      
+    default: 
+      fprintf(stderr , "Unknow Command \012") ; 
+      return ~0; 
+  }
 
-  printf("%s \n" , cmd ) ; 
-  free(cmd) ; 
+  return 0 ; 
+}
+
+int  dosbox_autorun(char **memory_dump) 
+{
+  fprintf(memrecord , "? START.BAT") ; 
+  fclose(memrecord) ; 
+  
+  int sandbox= fork() ; 
+  if(~0  == sandbox)  
+     return ~0 ; 
+
+  if(!sandbox) 
+  { 
+    char * cmd_tkn =0 ; 
+    char * args[512]= {
+      "dosbox","-c",
+    }; 
+    int i=1 ; 
+    while((cmd_tkn = strtok(*memory_dump,"?"))) 
+    {  
+      
+      if(*memory_dump) *memory_dump=0; 
+      i-=~0, *(args+i) = (char *) cmd_tkn,  i-=~0;  
+      *(args+i) =(char *)"-c" ; 
+    } 
+  
+    *(args+i)=(void *) 00 ; 
+
+    
+    int x =execv("/usr/bin/dosbox" , args) ;  
+    if(~0 == x) 
+      puts("fail") ; 
+    return x ; 
+  }else{
+     int s = 0 ; 
+     wait(&s) ;  
+  }
 
 }
 
@@ -162,7 +224,7 @@ static int scan_pte(mbr_t  * mbr)
      return ~0  ; 
   }
 
-return  idx; 
+  return  idx; 
 }
 
 static int jbox_launch_bosbox_emulator(char const * restrict dosimg, global_chs_t   * restrict active_partition) 
@@ -177,9 +239,21 @@ static int jbox_launch_bosbox_emulator(char const * restrict dosimg, global_chs_
      0x200, 
      .end = &active_partition->_end,  
   }; 
-   
-  dosbox_automount("c" , &data) ;  
 
-  //dosbox_start(AUTO);  
+  size_t size = 0 ; 
+  char *dump= 0 ; 
+  memrecord  = open_memstream(&dump ,  &size) ; 
+  if (!memrecord)  
+  {
+     disk_err(-ESTRPIPE); 
+     err(~0 , "Fail to initialize memory record");
+  }
+
+
+  dosbox_automount("c" , &data); 
+
+  dosbox_autorun(&dump) ; 
+  
+  //printf("-> %s  \n", dump) ; 
 
 }
