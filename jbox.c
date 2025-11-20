@@ -31,8 +31,6 @@ enum DOSBOX_DIRECTIVES {
 #define CMDIR(__directive) \
   #__directive
 
-FILE *memrecord=(FILE *)00 ; 
-char *dosbox   =0; 
 
 struct dosbox_entry_t  
 { 
@@ -41,6 +39,9 @@ struct dosbox_entry_t
   ssize_t byte_sector; 
   struct __chs_t *end ;
 };  
+
+FILE *memrecord=(FILE *)00 ; 
+char *dosbox   =0; 
 
 static int has_dosbox(void) 
 {
@@ -112,8 +113,21 @@ int dosbox_automount(char const  * diskpart , struct dosbox_entry_t * entry)
   }
 
   return 0 ; 
-}
+} 
 
+static int dosbox_extract(char **memory  ,char *payload[static 0xff]) 
+{  
+  char * cmd_tkn = 0; 
+  int idx=1 ; 
+  while((cmd_tkn = strtok(*memory , "?"))) 
+  {
+    if(*memory) *memory=(void*)0;
+    idx-=~0,*(payload+idx)=(char *) cmd_tkn , idx-=~0 ; 
+    *(payload+idx) = (char*)"-c" ; 
+  }
+  *(payload+idx) =(void *)0; 
+  return 0; 
+}
 int  dosbox_autorun(char **memory_dump) 
 {
   fprintf(memrecord , "? START.BAT") ; 
@@ -125,26 +139,12 @@ int  dosbox_autorun(char **memory_dump)
 
   if(!sandbox) 
   { 
-    char * cmd_tkn =0 ; 
-    char * args[512]= {
-      "dosbox","-c",
-    }; 
-    int i=1 ; 
-    while((cmd_tkn = strtok(*memory_dump,"?"))) 
-    {  
-      
-      if(*memory_dump) *memory_dump=0; 
-      i-=~0, *(args+i) = (char *) cmd_tkn,  i-=~0;  
-      *(args+i) =(char *)"-c" ; 
-    } 
-  
-    *(args+i)=(void *) 00 ; 
-
-    
-    int x =execv("/usr/bin/dosbox" , args) ;  
-    if(~0 == x) 
-      puts("fail") ; 
-    return x ; 
+    char *payload[0xff]={"dosbox" , "-c"} ; 
+    dosbox_extract(memory_dump , payload) ;  
+    int status =execv(dosbox , payload) ;   
+    if(!(~0 ^ status)) 
+      return ~0 ;  
+    return 0; 
   }else{
      int s = 0 ; 
      wait(&s) ;  
@@ -249,11 +249,7 @@ static int jbox_launch_bosbox_emulator(char const * restrict dosimg, global_chs_
      err(~0 , "Fail to initialize memory record");
   }
 
-
   dosbox_automount("c" , &data); 
-
   dosbox_autorun(&dump) ; 
-  
-  //printf("-> %s  \n", dump) ; 
 
 }
