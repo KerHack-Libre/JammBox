@@ -1,13 +1,13 @@
-<img src="assets/imgs/logos/freedos.jpg" width="132"  height="" alt="freedos" style="margin-right:20px;border-radius:35px"  align="left"/>
-<img src="assets/imgs/logos/dosbox-logo.png" width="132"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="right"/>
+<img src="assets/imgs/logos/freedos.jpg" width=""  height="" alt="freedos" style="margin-right:20px;border-radius:35px"  align="right"/>
+<img src="assets/imgs/logos/dosbox-logo.png" width="132"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="left"/>
 <div>
 <div>
 </div>
 
- <a href="https://github.com/KerHack-Libre/"><img src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor'/></a>
+ <a href="https://github.com/KerHack-Libre/https://github.com/KerHack-Libre/JammBox/"><img src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor'/></a>
 
 
-# JàmmBox
+---
 
 ## Pourquoi  "jàmm"
 
@@ -44,10 +44,9 @@ README.md : tu es ici 👋
 
 ```
 
-Jeux disponibles
-
+Jeux disponibles: 
 - Prince of Persia (1990) ✔️
-… et d’autres bientôt : classiques d’action, plateforme, puzzle, aventure, etc.
+- … et d’autres bientôt : classiques d’action, plateforme, puzzle, aventure, etc.
 (Peut-être même quelques surprises pour les puristes 🎩) 
 
 ## Comment utiliser  
@@ -67,13 +66,12 @@ unzip  games/dossier_du_jeu/jeu.zip
 Puis laisse la magie DOSBox opérer.
 
 ### Auteur & Mainteneur
-Umar Ba
-jUmarB@protonmail.com
+Umar Ba [jUmarB@protonmail.com](jUmarB@protonmail.com) 
 _KerHack-Libre_ — “comprendre, construire, transmettre.”
 
 ### ⚖️ Licence
+ <a href="https://github.com/KerHack-Libre/https://github.com/KerHack-Libre/JammBox/"><img align="right" src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor'/></a>
 
-L’ensemble des projets de KërNix sont distribués sous GPLv3,
-en accord avec les 4 libertés fondamentales du logiciel libre.
-
+_L’ensemble des projets de KërNix sont distribués sous GPLv3,
+en accord avec les 4 libertés fondamentales du logiciel libre_ 
 
