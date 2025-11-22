@@ -1,3 +1,12 @@
+<img src="assets/imgs/logos/freedos.jpg" width="132"  height="" alt="freedos" style="margin-right:20px;border-radius:35px"  align="left"/>
+<img src="assets/imgs/logos/dosbox-logo.png" width="132"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="right"/>
+<div>
+<div>
+</div>
+
+ <a href="https://github.com/KerHack-Libre/"><img src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor'/></a>
+
+
 # JàmmBox
 
 ## Pourquoi  "jàmm"
