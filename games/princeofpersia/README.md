@@ -22,10 +22,13 @@ Déplacements :
   ↓  : accroupir / descendre d'une plateforme
 
 Combat :
-  SHIFT gauche (ou CTRL) : dégainer l'épée / attaquer
+  SHIFT gauche (ou CTRL) : dégainer l'épée / attaquer/ avancer lentement
+
+  
 
 Autres :
-  ESC : pause / quitter
+  ESC  : pause / quitter
+  SPACE: Afficher le timer
 ``` 
 #### ASTUCES
 
