@@ -178,7 +178,7 @@ int main(int ac , char *const *av , char * const *ev)
   
   mbr =*(mbr_t*) data ; 
 
-  if(!has_boot_signature(&mbr)) 
+  if(has_boot_signature(&mbr)) 
   {
      err((pstatus^=1) , "Invalid Disk") ; 
      goto _eplg; 

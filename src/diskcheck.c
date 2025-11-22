@@ -31,8 +31,8 @@ char  * diskload(char const * dosimg)
 }
 
 uint8_t  has_boot_signature(mbr_t *restrict  mbr ) 
-{
-  return  !mbr->_boot_sig ^ MBR_BS ; 
+{ 
+  return  (mbr->_boot_sig ^ MBR_BS);  
 }
 
 
