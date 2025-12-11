@@ -8,11 +8,13 @@ cc=meson.get_compiler('c')
 
 sources=[ 
   'src/jbox.c', 
-  'src/diskcheck.c'
+  'src/diskcheck.c',
+  'src/dboxutils.c'
   ]
 
 inc=include_directories('src') 
 
 executable('JammBox',
            sources,
+           include_directories:['src'],
            install : true)

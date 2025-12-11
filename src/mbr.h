@@ -12,6 +12,8 @@
 #if !defined(DOSMBR_H) 
 #define DOSMBR_H 
 
+#define  MBRCHS 
+
 #include <stdint.h> 
 #include "attr.h"
 
@@ -20,7 +22,7 @@
 #define  MBR_BC      446                                          /* Master Boot Record Boot Code size      */
 #define  MBR_BS_SIZE 2                                            /* Master Boot Record Boot Signature size */
 
-#define  MBR_TS      (MBR_BC + (MBR_PE * 16) + MBR_BS_SIZE)              /* Master Boot Record Total Size          */
+#define  MBR_TS      (MBR_BC + (MBR_PE * 16) + MBR_BS_SIZE)       /* Master Boot Record Total Size          */
 
 typedef struct __mbr_t mbr_t  ;  
 typedef struct __chs_t  chs_t ;

@@ -6,8 +6,6 @@
  * le compilateur sur certains operation.  
  * 
  * Copyright(c) 2025 , Umar Ba <jUmarB@protonmail.com> 
- * 
- * TODO : check for glibc compiler  or clang 
  */ 
 
 #if __glibc_has_attribute(packed) 
@@ -20,4 +18,10 @@
 # define __algn(type_t) __attribute__((aligned(__alignof__(sizeof(type_t))))) 
 #else 
 # define __align(type_t) 
+#endif 
+
+#if __glibc_has_attribute(constructor) 
+# define __ctor   __attribute((constructor)) 
+#else 
+# define __ctor  /* NOTHING  */ 
 #endif 
