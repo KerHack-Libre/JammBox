@@ -37,7 +37,10 @@ Un excellent prétexte pour apprendre, expérimenter, et comprendre comment les 
 ### Contenu du depot 
 ```bash 
 /games/ : les jeux DOS configurés
-/src/ : le lanceur automatique en C
+/src/   : Programme source en C
+/assets/: Les assets 
+  misc/ : divers
+  imgs/ : Images & logos 
 
 README.md : tu es ici 👋
 (Et d’autres fichiers techniques ou utilitaires selon les ajouts)
