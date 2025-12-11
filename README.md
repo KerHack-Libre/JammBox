@@ -34,6 +34,9 @@ _(Documentation en cours de redaction)_
 
 Un excellent prétexte pour apprendre, expérimenter, et comprendre comment les PC de l’époque démarraient, organisaient les données… et lançaient nos jeux préférés.
 
+> [!IMPORTANT]
+> Pour Jouer convenablement  il est recommande  d'avoir l'emulateur DosBox disponible.
+
 ### Contenu du depot 
 ```bash 
 /games/ : les jeux DOS configurés
@@ -44,7 +47,6 @@ Un excellent prétexte pour apprendre, expérimenter, et comprendre comment les 
 
 README.md : tu es ici 👋
 (Et d’autres fichiers techniques ou utilitaires selon les ajouts)
-
 ```
 
 Jeux disponibles: 
