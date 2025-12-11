@@ -1,0 +1,5 @@
+cls
+@echo off
+type INFO.TXT
+pause
+%exe
