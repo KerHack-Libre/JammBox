@@ -8,6 +8,16 @@
  * Copyright(c) 2025 , Umar Ba <jUmarB@protonmail.com> 
  */ 
 
+#if defined(__has_feature) 
+# if  !__has_feature(nullability) 
+  # define _Nonnull 
+  # define _Nullable 
+# endif 
+# else 
+  # define _Nonnull 
+  # define _Nullable 
+#endif 
+
 #if __glibc_has_attribute(packed) 
 # define  __packed  __attribute__((packed)) 
 #else 
