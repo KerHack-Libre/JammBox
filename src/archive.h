@@ -22,6 +22,12 @@ extern "C" {
 #ifdef _USE_ZIP_ARCHIVE  
 # include <zip.h> 
 
+  // 50 4B 03 04
+# define  ZIP_ARCHIVE_FINGERPRINT (0x50|0x4b << 8) 
+# define  NON_EMPTY_ARCHIVE 0x403 
+# define  EMPTY_ARCHIVE   0x605 
+# define  SPANNED_ARCHIVE 0x807 
+
 extern zip_t * za ; 
 extern zip_error_t *zerr; 
 
@@ -35,9 +41,11 @@ extern zip_error_t *zerr;
     free(s); zip_error_fini(zerr);\
   }while(0)
 
-int archive_open(const char *__restrict__ archive_filename) ;  
-int archive_scan(zip_t * _Nonnull za , const char * _Nullable  lookup_file); 
+int archive_open(const char *__restrict__ archive_filename); 
+static int archive_check(const char * __restrict__ archive_filename) ; 
+int archive_scan(zip_t * _Nonnull za , char * _Nonnull  lookup_file); 
 static  int archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_entry_file_stat) ;  
+static char * archive_get_dirent_path_location(const char *  __restrict__  _Nonnull archive_file);  
 
 #endif /*! _USE_ZIP_ARCHIVE */ 
 

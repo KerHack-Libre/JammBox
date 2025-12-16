@@ -1,6 +1,7 @@
 //SPDX-License-Identifier:GPL-3.0 
 
-#include "archive.h" 
+#include "archive.h"
+
 #include <fcntl.h> 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -11,20 +12,68 @@
 #ifdef _USE_ZIP_ARCHIVE  
 zip_t *za = (void *)0 ;  
 zip_error_t *zerr =(void*)0 ; 
+char * archive_file_root_dir=(void *)0 ; 
 
-int archive_open(const char  *restrict archive_file) 
+int  archive_open(const char  *restrict archive_file) 
 {
-  int zerrno =0 ; 
-  za = zip_open(archive_file , 0x10,&zerrno ) ; 
+  int zerrno =0 ;  
+  
+  if(archive_check(archive_file))  
+    return  ~0;  
+
+  za = zip_open(archive_file , 0x10,&zerrno);  
   if(!za)
   {
     ZIP_ERR(zip_open , zerrno ,"fail to open archive file"); 
     return zerrno; 
   } 
+  
+  archive_file_root_dir = archive_get_dirent_path_location(archive_file); 
   return 0 ; 
 }
 
-int archive_scan(zip_t * za ,  const char  *lookup_file) 
+static int archive_check(const char * archive_filename)
+{
+  uint32_t signature= 0x0  ;  
+
+  int fd  = open(archive_filename ,  O_RDONLY) ; 
+  if(!(~0 ^ fd)) 
+    return ~0; 
+  
+  read(fd ,  &signature , sizeof(signature)) ; 
+  close(fd) ; 
+
+  if((signature & 0xffff) ^ (ZIP_ARCHIVE_FINGERPRINT))  
+    return ~0 ;  //!ZIP_ARCHIVE_BAD_SIGNATURE  
+
+  switch( (signature >> 0x10))  
+  {
+    case NON_EMPTY_ARCHIVE:
+      return  0 ;  
+    case EMPTY_ARCHIVE: 
+      return 1 ; 
+    case SPANNED_ARCHIVE:
+      return 2 ; 
+  }
+  
+  return ~0 ; 
+  
+}
+static char  * archive_get_dirent_path_location(const char * restrict archive_file) 
+{
+  char *dirent_location = strrchr(archive_file , 0x2f); 
+
+  if(!dirent_location) 
+    return (char *)00 ; 
+  
+  ssize_t len  = dirent_location - archive_file ; 
+  if(0 == len) 
+    return (char *)00; 
+
+  return  strndup(archive_file , len);  
+}
+
+int archive_scan(zip_t * za ,   char  *lookup_file) 
 { 
   zip_int64_t total_entries=0;  
   zip_stat_t   zstbuff ; 
@@ -38,30 +87,36 @@ int archive_scan(zip_t * za ,  const char  *lookup_file)
   {
      if(zip_stat_index(za ,entry, 0  ,  &zstbuff))
        continue ;  //!NOTE : silent ! 
-    
+  
      if(!archive_populate(za, &zstbuff)) 
        continue ; 
   }
 
-
+  lookup_file = strdup(archive_file_root_dir) ; 
+  free(archive_file_root_dir)  , archive_file_root_dir =0  ;   
   return 0 ; 
 } 
 
-
-static  int archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_entry_file_stat) 
+static  int archive_populate(zip_t* _Nonnull za, zip_stat_t *  zip_entry_file_stat) 
 {
   
   zip_file_t * target_file= (zip_file_t *) 00 ; 
   unsigned int fd = ~0 ;    
-  
+  char * path =  (char*)00 ; 
+
   target_file = zip_fopen_index(za ,  zip_entry_file_stat->index ,0 ); 
   if(!target_file) 
     return 0; 
-  
-  fd ^= open(zip_entry_file_stat->name ,O_CREAT| O_EXCL | O_RDWR, 
+
+  asprintf(&path, "%s/%s", archive_file_root_dir , zip_entry_file_stat->name) ; 
+  fd ^= open(path ,O_CREAT| O_EXCL | O_RDWR, 
       /*TODO : Appliquer les meme permission que le ficher zip source (en entre) */
       S_IRUSR | S_IWUSR);  
 
+  free(archive_file_root_dir); 
+  archive_file_root_dir = strdup(path) ; 
+  free(path) , path=0 ; 
+  
   if(!fd)  
   { 
     if(0x11 != errno)   
@@ -72,7 +127,8 @@ static  int archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_ent
   
   fd=~fd ; 
   
-  char *content_buffer = (char*) malloc(zip_entry_file_stat->size) ;
+  char *content_buffer = (char*) malloc(zip_entry_file_stat->size);
+
   if (!content_buffer) 
     return  0 ; 
   
@@ -87,6 +143,7 @@ static  int archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_ent
 
   free(content_buffer) , content_buffer =(void *) 0 ; 
   free(target_file)    , target_file= (void *)0 ; 
+
   close(fd) ; 
   
   return zip_entry_file_stat->size ;   

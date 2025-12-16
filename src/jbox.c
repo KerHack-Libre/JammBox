@@ -47,18 +47,20 @@ int main(int ac , char *const *av)
   if(!(ac &~(1))) 
   {
     disk_err(-EINVAL) ; 
-    err( (pstatus^=1),"Require DOS/MBR image")  ; 
+    err( (pstatus^=1),"Require DOS/MBR image or  zip archive file (should have the image file inside)")  ; 
     goto _eplg ; 
   }
   
   dosimg =  *(av+1) ;  
   
-  /* 
-  archive_open(dosimg); 
-  archive_scan(za, (void *)0) ;  
+  if(!archive_open(dosimg))  
+  {
+    archive_scan(za, dosimg) ;   
+  }
+
+  printf("-> %s \012",  dosimg) ; 
 
   return 0 ; 
-  */ 
   data = diskload(dosimg); 
   if(!data) 
   {
