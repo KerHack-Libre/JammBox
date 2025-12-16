@@ -41,9 +41,6 @@ int main(int ac , char *const *av)
   const char *dosimg= (char*)00, 
              *data  =  0 ; 
 
-  /*TODO : file format dectection 
-   *    *img file or compressed archive  
-   */
   if(!(ac &~(1))) 
   {
     disk_err(-EINVAL) ; 
@@ -189,20 +186,26 @@ int jbox_create_sandbox(char ** memdump)
 
   //! TODO : redirect  io to /dev/null 
   if(!(0xffff  &~ (0xfffff ^ sandbox))) 
-  {
+  { 
+    //!TODO : turn off dosbox log 
+    //!TODO : redirect dosbox log  from  /dev/null or log file 
+    //!int lgfd =  sanbox_write_log((void *)0) ;  //(void *)0 -> /dev/null  
+    char *black_hole =  "/dev/null";  
+    int  dn  = open(black_hole, O_RDONLY) ; 
+    //!Je suppose que ca marchera toujours ! 
+    dup2(dn , STDERR_FILENO) ; 
+    dup2(dn , STDOUT_FILENO) ;  
+    
     char *payload[0xff] = {
       EMULNAME(dosbox) ,(char[]){0x2d,0x63,00},
     } ; 
     dbox_extract(memdump , payload);
     int s = execv(dbox_emulator , payload) ; 
-
     if(!(~0 ^ s)) 
-    {
        perror("execv") ; 
-       exit(1); 
-    }
 
-    exit(0);   
+    //close(lgfd) ; 
+    exit(s);   
   }else 
   {  
     wait(&status);  
