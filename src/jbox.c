@@ -1,7 +1,6 @@
 //SPDX-License-Identifier:GPL-3.0 
 
 #define _GNU_SOURCE  
-#define _USE_ZIP_ARCHIVE  
 #include <stdlib.h> 
 #include <stdio.h> 
 #include <unistd.h> 
@@ -16,6 +15,9 @@
 #include "dboxutils.h"
 #include "archive.h" 
 
+#ifdef USE_ZIP_ARCHIVE 
+extern zip_t *za;  
+#endif 
 
 extern char **environ ; 
 
@@ -25,8 +27,6 @@ extern char **environ ;
 FILE *memrecord=(FILE *)00 ; 
 extern FILE * memrecord_ptr ; 
 extern char * dbox_emulator ; 
-
-extern zip_t *za;  
 
 static char * jbox_path_resolve(char  const * dosimg);  
 static int scan_pte(mbr_t *) ;   
@@ -52,15 +52,15 @@ int main(int ac , char *const *av)
   }
   
   dosimg =  *(av+1) ;  
-  
+#if defined(USE_ZIP_ARCHIVE)
   if(!archive_open(dosimg))  
   {
     archive_scan(za, dosimg) ;   
   }
-
   printf("-> %s \012",  dosimg) ; 
-
   return 0 ; 
+#endif 
+
   data = diskload(dosimg); 
   if(!data) 
   {

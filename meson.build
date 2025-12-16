@@ -11,7 +11,7 @@ add_project_arguments(
     '-Wunused',
     '-Wunused-parameter'
     ),
-  '-D_USE_ZIP_ARCHIVE',
+  '-D_USE_ZIP_ARCHIVE=1',
   language:'c'
   )
 
@@ -21,8 +21,13 @@ sources=[
   'src/dboxutils.c',
   'src/archive.c'
   ]
+ 
+libzip =dependency('libzip' , version:'>=1.11.0' ,required:false , 
+  not_found_message:'It\'s  highly recommended to have libzip library to proceed.' ) 
+if not libzip.found() 
+  add_global_arguments('-D_USE_ZIP_ARCHIVE=0' , language:'c') 
+endif 
 
-libzip =dependency('libzip' , version:'>=1.11.0' ,required:true)   
 inc=include_directories('src') 
 
 executable('JammBox',
