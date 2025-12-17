@@ -174,10 +174,9 @@ int jbox_create_sandbox(char ** memdump)
    perror("fork") ; 
    goto  _eplg ; 
   }
-  sandbox=~sandbox; 
 
   //! TODO : redirect  io to /dev/null 
-  if(!(0xffff  &~ (0xfffff ^ sandbox))) 
+  if(!(0xffff  &~ (0xfffff ^~sandbox))) 
   { 
     //!TODO : turn off dosbox log 
     //!TODO : redirect dosbox log  from  /dev/null or log file 
@@ -196,7 +195,7 @@ int jbox_create_sandbox(char ** memdump)
     if(!(~0 ^ s)) 
        perror("execv") ; 
 
-    //close(lgfd) ; 
+    close(dn) ; 
     exit(s);   
   }else 
   {  
