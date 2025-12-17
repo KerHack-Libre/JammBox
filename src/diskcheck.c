@@ -7,30 +7,48 @@
 #include <stdint.h> 
 #include <assert.h>
 #include <errno.h> 
+#include <string.h> 
 
 mbr_t mbr ; 
-char overhead[MBR_TS] = {0} ;  
+
+void disk_mesg_err(void) {
+  if(0 > errno) 
+    switch(errno) 
+    {
+      case INVDIM:GETMESG(INVDIM);break;  
+    }
+  else 
+    fprintf(stderr, "%s\012",strerror(*__errno_location())); 
+  
+  errno=0 ;          
+}
 
 
-char  * diskload(char const * dosimg) 
+uint8_t diskload(char const * dosimg) 
 { 
+   char overhead[MBR_TS] __algn(mbr_t) = {0} ; 
    size_t br =0; 
    FILE *fp  = fopen(dosimg , "rb") ;  
    if(!fp) 
    { 
-     disk_err(-EIO) ; 
-     return (char *)0 ; 
+     disk_err(EIO) ; 
+     return ~0 ;  
    }
    
    br = fread(overhead ,1 , MBR_TS ,fp) ;  
    assert(!(br ^ sizeof(overhead))) ; 
-   fclose(fp);
-
-   return  overhead ; 
-
+   fclose(fp); 
+  
+   if(has_boot_signature((mbr_t*)overhead)) 
+   {
+      disk_err(INVDIM) ; 
+      return  ~0 ; 
+   }
+   
+   return 0; 
 }
 
-uint8_t  has_boot_signature(mbr_t *restrict  mbr ) 
+static uint8_t  has_boot_signature(mbr_t *restrict  mbr ) 
 { 
   return  (mbr->_boot_sig ^ MBR_BS);  
 }
@@ -53,7 +71,7 @@ global_chs_t * decode_chsbytes(__pte *  restrict active_partition)
   global_chs_t *  chs =  malloc(sizeof(*chs)) ; 
   if(!chs) 
   { 
-    disk_err(-ENOMEM); 
+    disk_err(ENOMEM); 
     return (global_chs_t *) 00;  
   }
   

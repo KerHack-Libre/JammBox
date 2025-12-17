@@ -58,25 +58,17 @@ int main(int ac , char *const *av)
   return 0 ; 
 #endif 
 
-  data = diskload(dosimg); 
-  if(!data) 
+  if(diskload(dosimg)) 
   {
-    err((pstatus^=1),"Fail to load image disk") ;
-    goto _eplg; 
-  }
-  
-  mbr =*(mbr_t*) data ; 
-
-  if(has_boot_signature(&mbr)) 
-  {
-     err((pstatus^=1) , "Invalid Disk") ; 
+     pstatus^=err_expr(dc_warn("Fail to load image disk"));  
+     disk_mesg_err() ; 
      goto _eplg; 
-  } 
+  }
 
    int apartno = scan_pte(&mbr) ;  
    if(~0 == apartno) 
    {
-     err((pstatus^=1) , "No Active partition found") ; 
+     pstatus^=err_expr(dc_err("No Active partition found")); 
      goto _eplg ; 
    }
    __pte *active_boot_partition = (mbr.ptabs+apartno); 
