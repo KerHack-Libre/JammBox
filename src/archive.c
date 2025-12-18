@@ -9,13 +9,15 @@
 #include <errno.h> 
 
 
-#ifdef _USE_ZIP_ARCHIVE  
+#ifdef USE_ZIP_ARCHIVE  
 zip_t *za = (void *)0 ;  
 zip_error_t *zerr =(void*)0 ; 
+
 char * archive_file_root_dir=(void *)0 ; 
 
 int  archive_open(const char  *restrict archive_file) 
-{
+{ 
+
   int zerrno =0 ;  
   
   if(archive_check(archive_file))  

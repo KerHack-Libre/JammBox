@@ -1,7 +1,6 @@
 //SPDX-License-Identifier:GPL-3.0 
 
 #define _GNU_SOURCE  
-#define _USE_ZIP_ARCHIVE  
 #include <stdlib.h> 
 #include <stdio.h> 
 #include <unistd.h> 
@@ -16,6 +15,9 @@
 #include "dboxutils.h"
 #include "archive.h" 
 
+#ifdef USE_ZIP_ARCHIVE 
+extern zip_t *za;  
+#endif 
 
 extern char **environ ; 
 
@@ -25,8 +27,6 @@ extern char **environ ;
 FILE *memrecord=(FILE *)00 ; 
 extern FILE * memrecord_ptr ; 
 extern char * dbox_emulator ; 
-
-extern zip_t *za;  
 
 static char * jbox_path_resolve(char  const * dosimg);  
 static int scan_pte(mbr_t *) ;   
@@ -41,9 +41,6 @@ int main(int ac , char *const *av)
   const char *dosimg= (char*)00, 
              *data  =  0 ; 
 
-  /*TODO : file format dectection 
-   *    *img file or compressed archive  
-   */
   if(!(ac &~(1))) 
   {
     disk_err(-EINVAL) ; 
@@ -52,34 +49,26 @@ int main(int ac , char *const *av)
   }
   
   dosimg =  *(av+1) ;  
-  
+#if defined(USE_ZIP_ARCHIVE)
   if(!archive_open(dosimg))  
   {
     archive_scan(za, dosimg) ;   
   }
-
   printf("-> %s \012",  dosimg) ; 
-
   return 0 ; 
-  data = diskload(dosimg); 
-  if(!data) 
-  {
-    err((pstatus^=1),"Fail to load image disk") ;
-    goto _eplg; 
-  }
-  
-  mbr =*(mbr_t*) data ; 
+#endif 
 
-  if(has_boot_signature(&mbr)) 
+  if(diskload(dosimg)) 
   {
-     err((pstatus^=1) , "Invalid Disk") ; 
+     pstatus^=err_expr(dc_warn("Fail to load image disk"));  
+     disk_mesg_err() ; 
      goto _eplg; 
-  } 
+  }
 
    int apartno = scan_pte(&mbr) ;  
    if(~0 == apartno) 
    {
-     err((pstatus^=1) , "No Active partition found") ; 
+     pstatus^=err_expr(dc_err("No Active partition found")); 
      goto _eplg ; 
    }
    __pte *active_boot_partition = (mbr.ptabs+apartno); 
@@ -185,24 +174,29 @@ int jbox_create_sandbox(char ** memdump)
    perror("fork") ; 
    goto  _eplg ; 
   }
-  sandbox=~sandbox; 
 
   //! TODO : redirect  io to /dev/null 
-  if(!(0xffff  &~ (0xfffff ^ sandbox))) 
-  {
+  if(!(0xffff  &~ (0xfffff ^~sandbox))) 
+  { 
+    //!TODO : turn off dosbox log 
+    //!TODO : redirect dosbox log  from  /dev/null or log file 
+    //!int lgfd =  sanbox_write_log((void *)0) ;  //(void *)0 -> /dev/null  
+    char *black_hole =  "/dev/null";  
+    int  dn  = open(black_hole, O_RDONLY) ; 
+    //!Je suppose que ca marchera toujours ! 
+    dup2(dn , STDERR_FILENO) ; 
+    dup2(dn , STDOUT_FILENO) ;  
+    
     char *payload[0xff] = {
       EMULNAME(dosbox) ,(char[]){0x2d,0x63,00},
     } ; 
     dbox_extract(memdump , payload);
     int s = execv(dbox_emulator , payload) ; 
-
     if(!(~0 ^ s)) 
-    {
        perror("execv") ; 
-       exit(1); 
-    }
 
-    exit(0);   
+    close(dn) ; 
+    exit(s);   
   }else 
   {  
     wait(&status);  

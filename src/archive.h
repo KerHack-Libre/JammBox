@@ -19,10 +19,10 @@
 extern "C" { 
 #endif 
 
-#ifdef _USE_ZIP_ARCHIVE  
+#if _USE_ZIP_ARCHIVE   
+# define USE_ZIP_ARCHIVE 
 # include <zip.h> 
 
-  // 50 4B 03 04
 # define  ZIP_ARCHIVE_FINGERPRINT (0x50|0x4b << 8) 
 # define  NON_EMPTY_ARCHIVE 0x403 
 # define  EMPTY_ARCHIVE   0x605 
@@ -47,13 +47,15 @@ int archive_scan(zip_t * _Nonnull za , char * _Nonnull  lookup_file);
 static  int archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_entry_file_stat) ;  
 static char * archive_get_dirent_path_location(const char *  __restrict__  _Nonnull archive_file);  
 
+#else 
+  # warning  "LibZip not Found!"
 #endif /*! _USE_ZIP_ARCHIVE */ 
-
 
 
 #if defined(__cplusplus) 
 }
 #endif 
+
 
 
 #endif //!ARCHIVE  
