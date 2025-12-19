@@ -28,12 +28,13 @@ FILE *memrecord=(FILE *)00 ;
 extern FILE * memrecord_ptr ; 
 extern char * dbox_emulator ; 
 
-static char * jbox_path_resolve(char  const * dosimg);  
+static char * jbox_path_resolve(char  const *_Nonnull dosimg);  
 static int scan_pte(mbr_t *) ;   
 static int jbox_launch_dosbox_emulator(const char    * __restrict__, 
                                        char const    * __restrict__, 
                                        global_chs_t  * __restrict__ ) ; 
-int jbox_create_sandbox(char ** memdump);   
+int jbox_create_sandbox(char **_Nonnull memdump); 
+static int sanbox_write_log_to(char  *_Nullable journal , int ios_direction) ; 
 
 int main(int ac , char *const *av) 
 {
@@ -157,7 +158,7 @@ static int jbox_launch_dosbox_emulator(const char * __restrict__ start_script,
 
   dbox_automount(DBOX_DRIVE(c), &payload); 
   dbox_autorun(start_script  , jbox_create_sandbox , (void ** )&dump) ; 
-
+  
   return 0 ; 
 
 }
@@ -174,20 +175,13 @@ int jbox_create_sandbox(char ** memdump)
    perror("fork") ; 
    goto  _eplg ; 
   }
-
-  //! TODO : redirect  io to /dev/null 
-  if(!(0xffff  &~ (0xfffff ^~sandbox))) 
+  
+  if(!(0xffff  &~ (0xfffff ^ (~sandbox))) )  
   { 
-    //!TODO : turn off dosbox log 
-    //!TODO : redirect dosbox log  from  /dev/null or log file 
-    //!int lgfd =  sanbox_write_log((void *)0) ;  //(void *)0 -> /dev/null  
-    char *black_hole =  "/dev/null";  
-    int  dn  = open(black_hole, O_RDONLY) ; 
-    //!Je suppose que ca marchera toujours ! 
-    dup2(dn , STDERR_FILENO) ; 
-    dup2(dn , STDOUT_FILENO) ;  
-    
-    char *payload[0xff] = {
+    int logfd = sanbox_write_log_to((void *)00/* /dev/null*/
+                                    ,STDERR_FILENO|STDOUT_FILENO); 
+
+    char *payload[1000] = {
       EMULNAME(dosbox) ,(char[]){0x2d,0x63,00},
     } ; 
     dbox_extract(memdump , payload);
@@ -195,14 +189,43 @@ int jbox_create_sandbox(char ** memdump)
     if(!(~0 ^ s)) 
        perror("execv") ; 
 
-    close(dn) ; 
+    close(logfd) ; 
     exit(s);   
   }else 
   {  
-    wait(&status);  
+    wait(&status); 
   }
-
 
 _eplg: 
   return  status ; 
+}
+
+static int sanbox_write_log_to(char  *_Nullable journal, int ios_direction) 
+{
+  unsigned int jfd =~0; 
+  char logfile[0xff] = "/dev/null"; 
+  mode_t usermod = 0 ;
+  mode_t io = O_RDWR ;
+  if (journal) 
+  {
+    memset(logfile ,  0 , 0xff); 
+    sprintf(logfile, "%s" , journal) ; 
+    io|=O_CREAT ;
+    usermod=S_IRUSR|S_IWUSR;  
+  }
+
+  jfd ^=open(logfile, io  , usermod) ; 
+  if(!jfd)
+  {
+    perror("open") ; 
+    return 0; 
+  }
+  
+  if(ios_direction &  STDOUT_FILENO) 
+    dup2(~jfd, STDOUT_FILENO) ; 
+
+  if(ios_direction &  STDERR_FILENO) 
+    dup2(~jfd , STDERR_FILENO) ; 
+
+  return ~jfd ; 
 }

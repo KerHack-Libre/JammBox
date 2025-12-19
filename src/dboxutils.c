@@ -69,7 +69,7 @@ int dbox_automount(const   char  * part_drive  ,
   return 0 ; 
 } 
 
-int dbox_extract(char **memory  ,char *payload[static 0xff]) 
+int dbox_extract(char **memory  ,char *payload[static 1000]) 
 {  
   char * cmd_tkn = 0; 
   int idx=1; 
@@ -79,16 +79,18 @@ int dbox_extract(char **memory  ,char *payload[static 0xff])
     idx-=~0,*(payload+idx)=(char *) cmd_tkn , idx-=~0 ; 
     *(payload+idx)= (char*)"-c" ; 
   }
-  *(payload+idx) =(void *)0; 
+  *(payload+idx) =(void *)0;  
   return 0; 
 }
 
 int  dbox_autorun(const char *  restrict  start_script,
                     sandbox_ctx  sandbox ,void ** cmdmem_dump )  
 {
+
   if(start_script) 
     fprintf(memrecord_ptr, "? %s", start_script) ; 
 
-  fclose(memrecord_ptr) ; 
+  fclose(memrecord_ptr) ;  
+
   return sandbox((char ** ) cmdmem_dump ) ; 
 }  
