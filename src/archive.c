@@ -99,7 +99,7 @@ int archive_scan(zip_t * za ,   char  *lookup_file)
   return 0 ; 
 } 
 
-static  int archive_populate(zip_t* _Nonnull za, zip_stat_t *  zip_entry_file_stat) 
+static  int archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat) 
 {
   
   zip_file_t * target_file= (zip_file_t *) 00 ; 
