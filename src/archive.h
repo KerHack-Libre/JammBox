@@ -31,6 +31,13 @@ extern "C" {
 extern zip_t * za ; 
 extern zip_error_t *zerr; 
 
+typedef struct  __unzip_t  unzip_t  ; 
+struct __unzip_t {
+  char * _filename ; 
+  size_t _size ; 
+}; 
+
+
 /*TODO :use function instead */ 
 #define ZIP_ERR(fcall,errcode , ...) \
   do{\
@@ -43,8 +50,8 @@ extern zip_error_t *zerr;
 
 int archive_open(const char *__restrict__ archive_filename); 
 static int archive_check(const char * __restrict__ archive_filename) ; 
-int archive_scan(zip_t * _Nonnull za , char * _Nonnull  lookup_file); 
-static  int archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_entry_file_stat) ;  
+char * archive_scan(zip_t * _Nonnull za ) ; 
+static struct __unzip_t * archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_entry_file_stat) ;  
 static char * archive_get_dirent_path_location(const char *  __restrict__  _Nonnull archive_file);  
 
 #else 

@@ -49,14 +49,20 @@ int main(int ac , char *const *av)
     goto _eplg ; 
   }
   
-  dosimg =  *(av+1) ;  
+  /*NOTE : it can be a zip or img file */
+  dosimg =  *(av+1) ;    
 #if defined(USE_ZIP_ARCHIVE)
-  if(!archive_open(dosimg))  
-  {
-    archive_scan(za, dosimg) ;   
+  if(!archive_open(dosimg)) 
+  {  
+    struct __unzip_t * data =(struct __unzip_t *) archive_scan(za);
+    if(!data) 
+    {
+       err((pstatus^=1),  "Fail to unzip entry archive") ; 
+       goto _eplg; 
+    }
+    dosimg = strdup(data->_filename);  
   }
-  printf("-> %s \012",  dosimg) ; 
-  return 0 ; 
+  
 #endif 
 
   if(diskload(dosimg)) 

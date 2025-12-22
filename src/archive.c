@@ -75,14 +75,16 @@ static char  * archive_get_dirent_path_location(const char * restrict archive_fi
   return  strndup(archive_file , len);  
 }
 
-int archive_scan(zip_t * za ,   char  *lookup_file) 
+char * archive_scan(zip_t * za) 
 { 
   zip_int64_t total_entries=0;  
-  zip_stat_t   zstbuff ; 
+  zip_stat_t   zstbuff ;  
+
+  char *uncompressed_data  __algn(struct __unzip_t) = (char *)00 ; 
 
   total_entries = zip_get_num_entries(za , ZIP_FL_UNCHANGED);  
   if(!(~0 ^  total_entries))  
-    return ~0 ; //ARCHIVE_ERR_ZIP_ENTRIES 
+    return (void *)~0  ; //ARCHIVE_ERR_ZIP_ENTRIES 
 
   unsigned int  entry =~0 ;
   while(++entry   < total_entries) 
@@ -90,21 +92,22 @@ int archive_scan(zip_t * za ,   char  *lookup_file)
      if(zip_stat_index(za ,entry, 0  ,  &zstbuff))
        continue ;  //!NOTE : silent ! 
   
-     if(!archive_populate(za, &zstbuff)) 
+     uncompressed_data = (char *) archive_populate(za, &zstbuff);  
+     if(!uncompressed_data ||  (void *)~0  == uncompressed_data) 
        continue ; 
   }
 
-  lookup_file = strdup(archive_file_root_dir) ; 
-  free(archive_file_root_dir)  , archive_file_root_dir =0  ;   
-  return 0 ; 
+  free(archive_file_root_dir)  , archive_file_root_dir =0  ;    
+  return   uncompressed_data ;  
+
 } 
 
-static  int archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat) 
+static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat) 
 {
   
   zip_file_t * target_file= (zip_file_t *) 00 ; 
   unsigned int fd = ~0 ;    
-  char * path =  (char*)00 ; 
+  char * path =  (char*)00 ;  
 
   target_file = zip_fopen_index(za ,  zip_entry_file_stat->index ,0 ); 
   if(!target_file) 
@@ -116,13 +119,13 @@ static  int archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat)
       S_IRUSR | S_IWUSR);  
 
   free(archive_file_root_dir); 
-  archive_file_root_dir = strdup(path) ; 
+  archive_file_root_dir = strdup(path) ;
   free(path) , path=0 ; 
   
   if(!fd)  
   { 
     if(0x11 != errno)   
-      return ~0 ;
+      return (void *)~0;
     //* NOTE : ignore si le fichier existe deja */ 
     errno = 0 ;  
   }
@@ -147,8 +150,15 @@ static  int archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat)
   free(target_file)    , target_file= (void *)0 ; 
 
   close(fd) ; 
-  
-  return zip_entry_file_stat->size ;   
+ 
+  unzip_t *unzip=  malloc(sizeof(*unzip)) ; 
+  if(!unzip) 
+    return (void *) 0 ; 
+ 
+  unzip->_filename = strdup(archive_file_root_dir) ; 
+  unzip->_size = zip_entry_file_stat->size;  
+
+  return unzip ; 
 } 
 #endif 
 
