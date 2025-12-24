@@ -1,9 +1,9 @@
 //SPDX-License-Identifier:GPL-3.0 
 /* archive.h 
  *
- * Compression et Decompression  des archives. 
+ * Compression/Decompression  des archives. 
  * Formats supportes: 
- *       - zip (en cours)
+ *       - zip [ok]
  *       - ... 
  * Copyright(c) 2025,  Umar Ba <jUmarB@protonmail.com> 
  */
@@ -50,7 +50,7 @@ struct __unzip_t {
 
 int archive_open(const char *__restrict__ archive_filename); 
 static int archive_check(const char * __restrict__ archive_filename) ; 
-char * archive_scan(zip_t * _Nonnull za ) ; 
+char * archive_scan(zip_t * _Nonnull za ) __algn(struct __unzip_t) ; 
 static struct __unzip_t * archive_populate(zip_t* _Nonnull za, zip_stat_t * _Nonnull   zip_entry_file_stat) ;  
 static char * archive_get_dirent_path_location(const char *  __restrict__  _Nonnull archive_file);  
 

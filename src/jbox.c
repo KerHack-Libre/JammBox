@@ -39,8 +39,7 @@ static int sanbox_write_log_to(char  *_Nullable journal , int ios_direction) ;
 int main(int ac , char *const *av) 
 {
   unsigned int pstatus= EXIT_SUCCESS ; 
-  const char *dosimg= (char*)00, 
-             *data  =  0 ; 
+  const char *dosimg= (char*)00 ; 
 
   if(!(ac &~(1))) 
   {

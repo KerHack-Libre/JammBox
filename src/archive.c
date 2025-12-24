@@ -92,7 +92,7 @@ char * archive_scan(zip_t * za)
      if(zip_stat_index(za ,entry, 0  ,  &zstbuff))
        continue ;  //!NOTE : silent ! 
   
-     uncompressed_data = (char *) archive_populate(za, &zstbuff);  
+     uncompressed_data = (char *) archive_populate(za, &zstbuff) ;  //,destination_location);  
      if(!uncompressed_data ||  (void *)~0  == uncompressed_data) 
        continue ; 
   }
@@ -105,58 +105,65 @@ char * archive_scan(zip_t * za)
 static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat) 
 {
   
+  unzip_t  * unzip = (unzip_t *) 00 ; 
   zip_file_t * target_file= (zip_file_t *) 00 ; 
-  unsigned int fd = ~0 ;    
+  unsigned int fd = ~0 ;   
   char * path =  (char*)00 ;  
 
   target_file = zip_fopen_index(za ,  zip_entry_file_stat->index ,0 ); 
   if(!target_file) 
     return 0; 
 
+  /*TODO : Appliquer les meme permission que le ficher zip source (en entre) */
+  //mode_t regusr =  archive_get_umodt(zip_entry_file_stat->name) ; 
+
   asprintf(&path, "%s/%s", archive_file_root_dir , zip_entry_file_stat->name) ; 
   fd ^= open(path ,O_CREAT| O_EXCL | O_RDWR, 
-      /*TODO : Appliquer les meme permission que le ficher zip source (en entre) */
       S_IRUSR | S_IWUSR);  
 
   free(archive_file_root_dir); 
-  archive_file_root_dir = strdup(path) ;
-  free(path) , path=0 ; 
-  
   if(!fd)  
   { 
-    if(0x11 != errno)   
-      return (void *)~0;
     //* NOTE : ignore si le fichier existe deja */ 
+    if(0x11 != errno)   
+      //!probablement une erreur no reconnue 
+      return (void *)~0; 
+
     errno = 0 ;  
   }
   
   fd=~fd ; 
+  unzip=  malloc(sizeof(*unzip)) ; 
+  if(!unzip) 
+    goto __free_target_file ;  
+
+  unzip->_filename = strdup(path) ; 
+  unzip->_size = zip_entry_file_stat->size;  
+  free(path) , path=0 ; 
   
   char *content_buffer = (char*) malloc(zip_entry_file_stat->size);
-
   if (!content_buffer) 
-    return  0 ; 
-  
+    goto __free_content_buffer ;
+
   int64_t ziprb   = zip_fread(target_file , content_buffer , zip_entry_file_stat->size) ;  
   if(0 >= ziprb) 
   {
     fprintf(stderr , "fail to read content \012") ; 
-    free(content_buffer) ; 
+    goto __free_content_buffer ;  
   }
 
   write(fd , content_buffer , zip_entry_file_stat->size) ; 
 
+__free_content_buffer: 
   free(content_buffer) , content_buffer =(void *) 0 ; 
+
+__free_target_file: 
   free(target_file)    , target_file= (void *)0 ; 
+
 
   close(fd) ; 
  
-  unzip_t *unzip=  malloc(sizeof(*unzip)) ; 
-  if(!unzip) 
-    return (void *) 0 ; 
  
-  unzip->_filename = strdup(archive_file_root_dir) ; 
-  unzip->_size = zip_entry_file_stat->size;  
 
   return unzip ; 
 } 
