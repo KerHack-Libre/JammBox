@@ -93,6 +93,7 @@ global_chs_t * decode_chsbytes(__pte *  restrict active_partition)
   chs->_end._sector &= 0x3f ; 
 
  
+  //!NOTE : DO NOT FORGET TO FREE  
   return chs ; 
 
 }

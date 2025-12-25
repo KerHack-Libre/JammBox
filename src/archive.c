@@ -75,14 +75,16 @@ static char  * archive_get_dirent_path_location(const char * restrict archive_fi
   return  strndup(archive_file , len);  
 }
 
-int archive_scan(zip_t * za ,   char  *lookup_file) 
+char * archive_scan(zip_t * za) 
 { 
   zip_int64_t total_entries=0;  
-  zip_stat_t   zstbuff ; 
+  zip_stat_t   zstbuff ;  
+
+  char *uncompressed_data  __algn(struct __unzip_t) = (char *)00 ; 
 
   total_entries = zip_get_num_entries(za , ZIP_FL_UNCHANGED);  
   if(!(~0 ^  total_entries))  
-    return ~0 ; //ARCHIVE_ERR_ZIP_ENTRIES 
+    return (void *)~0  ; //ARCHIVE_ERR_ZIP_ENTRIES 
 
   unsigned int  entry =~0 ;
   while(++entry   < total_entries) 
@@ -90,65 +92,80 @@ int archive_scan(zip_t * za ,   char  *lookup_file)
      if(zip_stat_index(za ,entry, 0  ,  &zstbuff))
        continue ;  //!NOTE : silent ! 
   
-     if(!archive_populate(za, &zstbuff)) 
+     uncompressed_data = (char *) archive_populate(za, &zstbuff) ;  //,destination_location);  
+     if(!uncompressed_data ||  (void *)~0  == uncompressed_data) 
        continue ; 
   }
 
-  lookup_file = strdup(archive_file_root_dir) ; 
-  free(archive_file_root_dir)  , archive_file_root_dir =0  ;   
-  return 0 ; 
+  free(archive_file_root_dir)  , archive_file_root_dir =0  ;    
+  return   uncompressed_data ;  
+
 } 
 
-static  int archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat) 
+static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat) 
 {
   
+  unzip_t  * unzip = (unzip_t *) 00 ; 
   zip_file_t * target_file= (zip_file_t *) 00 ; 
-  unsigned int fd = ~0 ;    
-  char * path =  (char*)00 ; 
+  unsigned int fd = ~0 ;   
+  char * path =  (char*)00 ;  
 
   target_file = zip_fopen_index(za ,  zip_entry_file_stat->index ,0 ); 
   if(!target_file) 
     return 0; 
 
+  /*TODO : Appliquer les meme permission que le ficher zip source (en entre) */
+  //mode_t regusr =  archive_get_umodt(zip_entry_file_stat->name) ; 
+
   asprintf(&path, "%s/%s", archive_file_root_dir , zip_entry_file_stat->name) ; 
   fd ^= open(path ,O_CREAT| O_EXCL | O_RDWR, 
-      /*TODO : Appliquer les meme permission que le ficher zip source (en entre) */
       S_IRUSR | S_IWUSR);  
 
   free(archive_file_root_dir); 
-  archive_file_root_dir = strdup(path) ; 
-  free(path) , path=0 ; 
-  
   if(!fd)  
   { 
-    if(0x11 != errno)   
-      return ~0 ;
     //* NOTE : ignore si le fichier existe deja */ 
+    if(0x11 != errno)   
+      //!probablement une erreur no reconnue 
+      return (void *)~0; 
+
     errno = 0 ;  
   }
   
   fd=~fd ; 
+  unzip=  malloc(sizeof(*unzip)) ; 
+  if(!unzip) 
+    goto __free_target_file ;  
+
+  unzip->_filename = strdup(path) ; 
+  unzip->_size = zip_entry_file_stat->size;  
+  free(path) , path=0 ; 
   
   char *content_buffer = (char*) malloc(zip_entry_file_stat->size);
-
   if (!content_buffer) 
-    return  0 ; 
-  
+    goto __free_content_buffer ;
+
   int64_t ziprb   = zip_fread(target_file , content_buffer , zip_entry_file_stat->size) ;  
   if(0 >= ziprb) 
   {
     fprintf(stderr , "fail to read content \012") ; 
-    free(content_buffer) ; 
+    goto __free_content_buffer ;  
   }
 
   write(fd , content_buffer , zip_entry_file_stat->size) ; 
 
+__free_content_buffer: 
   free(content_buffer) , content_buffer =(void *) 0 ; 
+
+__free_target_file: 
   free(target_file)    , target_file= (void *)0 ; 
 
+
   close(fd) ; 
-  
-  return zip_entry_file_stat->size ;   
+ 
+ 
+
+  return unzip ; 
 } 
 #endif 
 
