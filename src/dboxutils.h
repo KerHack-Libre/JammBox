@@ -9,6 +9,7 @@
 #if !defined(DBUTILS)
 #define DBUTILS
 
+#include "archive.h" 
 
 #define EMULNAME(target_emulator)  # target_emulator
 
@@ -59,5 +60,8 @@ int dbox_automount(const char * __restrict__ part_drive,
 int dbox_autorun(const char * __restrict__ internal_start_prog, 
                  sandbox_ctx sandbox_context , void ** cmdmem_dump  ) ;
 
+char ** dbox_games(const char * __restrict__  dosbox_game_path)  ;
+
+static  int filter(const struct dirent * dirent);  
 
 #endif /* DBUTILS */

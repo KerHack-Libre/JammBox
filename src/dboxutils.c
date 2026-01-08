@@ -6,9 +6,12 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
-#include "mbr.h" 
+#include <dirent.h> 
+#include <sys/types.h> 
 
-#include "dboxutils.h" 
+#include "mbr.h" 
+#include "dboxutils.h"
+
 
 
 char * dbox_emulator =(char*)00 ;  
@@ -94,3 +97,44 @@ int  dbox_autorun(const char *  restrict  start_script,
 
   return sandbox((char ** ) cmdmem_dump ) ; 
 }  
+
+
+char ** dbox_games(const char * restrict game_path) 
+{
+  char **founded_games = malloc(sizeof(char)  * 100 * 100 ) ;  
+  if(!founded_games) 
+  {
+    return (void *) 0 ; 
+  }
+  struct dirent **list = (void *)0 ; 
+  int direntries= scandir( game_path , &list , filter , alphasort) ; 
+  
+  int idx = 0 ; 
+  while(direntries--) 
+  {
+    printf("-> %s \n" , list[direntries]->d_name ); 
+    *(founded_games+idx) =  strdup(list[direntries]->d_name ) ; 
+    idx=-~idx ; 
+  } 
+
+  *(founded_games - (~idx)) =  (void *)0 ; 
+
+  return founded_games ; 
+  
+}
+static int filter(const struct  dirent * dirent) 
+{
+ 
+  //!NOTE : NOT a solide  verification  should go deep than just 
+  //        checking end extension name ! <WARNING> 
+  /*  
+  char *end_extention =  strrchr(dirent->d_name ,  0x2e);
+  
+ 
+  if( 0 == (strcmp(end_extention , ".zip"))|
+      0 == (strcmp(end_extention , ".img")))
+    puts("ok") ; 
+ */ 
+
+  return  !(!(dirent->d_type ^ (1<<8)))   ; 
+}

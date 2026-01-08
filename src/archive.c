@@ -34,7 +34,7 @@ int  archive_open(const char  *restrict archive_file)
   return 0 ; 
 }
 
-static int archive_check(const char * archive_filename)
+int archive_check(const char * archive_filename)
 {
   uint32_t signature= 0x0  ;  
 

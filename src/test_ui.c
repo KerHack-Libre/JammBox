@@ -13,15 +13,14 @@ int main(void)
  
   ui_init() ; 
 
-  ui_draw_layout(FOOTER , "Jammbox version 1.0 By KerHack-Libre") ;  
-  ui_draw_layout(HEADER , "Jammbox PlayGround") ; 
   
   char *list[] =  {
      "menu1" , 
      "menu2" , 
      "menu3" , 
      (void *)00 
-  }; 
+  };  
+
   ui_display_menulist((const char **)list ,  0) ;  
   
   

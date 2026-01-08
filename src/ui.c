@@ -4,9 +4,9 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <unistd.h>
-#include <string.h> 
+#include <string.h>
+#include <poll.h> 
 
-static unsigned  int  termdim =0 ; 
 
 static int ui_render(char * buffer ,  int wherearea)  
 {
@@ -51,31 +51,32 @@ int ui_init(void)
 
      return ~0; 
    }
-
+   
+   //!By default it'll clear the screen  on startup 
    tx(clear_screen); 
-   termdim = columns<<8 | lines ; 
+
+   ui_sticky_banner(BANNER_BOTTOM , BANNER_BOTTOM_STRING) ; 
+   ui_sticky_banner(BANNER_TOP , BANNER_TOP_STRING); 
+
    return OK ;  
 }
 
 //TODO : Add color attribute 
-int ui_draw_layout(int side ,  const char * __restrict__ title /*Color attribute*/)
+static int ui_sticky_banner(int side ,  const char * __restrict__ title /*Color attribute*/)
 {
    
-   int remain_column = termdim>> 8 ;  
+   int remain_column = columns ;  
    char * buff=(char *)00; 
-   int  which_line  = 0;  
    int  where = 0 ; 
+   
    if(strlen(title) >0 )
         remain_column+=~strlen(title); 
 
-   if(side &  HEADER) 
-   { 
-     where = 0 ; 
-   }
+   if(side &  BANNER_TOP ) 
+     where = 0 ; //TOP LINE  
 
-   if(side & FOOTER) 
-     where= termdim  & 0xff;  
-
+   if(side & BANNER_BOTTOM) 
+     where=  lines; //bottom lines   
 
   asprintf(&buff , "%s ?%is\012", title , remain_column);   
   return ui_render(buff ,  where) ; 
@@ -83,32 +84,90 @@ int ui_draw_layout(int side ,  const char * __restrict__ title /*Color attribute
 
 
 int ui_display_menulist(const char ** item_list , int highlight_item_pos)    
-{ 
-  struct coords { 
-     unsigned xcol ,  yline ;  
-  } cursmov = { 
-     columns >> 2  , 
-     lines   >> 2 
-  }; 
-  int default_item_selected =0  ; 
-  char i = 0 ; 
-  while(*(item_list+i))  
+{
+ 
+  //!coords where the menu item should appear 
+  unsigned int  xcol  = columns >> 2 , 
+                yline = lines >> 2 ; 
+
+  int  menu_location_eara = (xcol << 8 | yline), 
+    default_item_selected =0,
+    i = 0 ;
+
+  int proceed=1 ; 
+  while(proceed) 
   {
-     tg(cursor_address ,  cursmov.xcol  , cursmov.yline); 
+    while(*(item_list+i))  
+    {
+      tg(cursor_address ,  xcol  ,yline); 
+      default_item_selected = highlight_default_item_at( highlight_item_pos, i , COLOR_YELLOW); 
+      if(default_item_selected) 
+      {
+        printf("%s %10s<\012", *(item_list +i) , " "); 
+        tx(exit_attribute_mode) ;  
+      }else 
+        printf("%s %10s\012", *(item_list +i) , " "); 
+      
+      i=-~i , yline-=~0; 
+    }
 
-     default_item_selected = highlight_default_item_at( highlight_item_pos, i , COLOR_YELLOW); 
-     if(default_item_selected) 
+    highlight_item_pos  = ui_menu_interaction(highlight_item_pos ,  i)  ;
+    printf("hitp : %i \012" ,  highlight_item_pos) ; 
+    yline= menu_location_eara&0xff ;  
+    i=0 ; 
+  }
+
+  return default_item_selected ;  
+}
+
+int ui_menu_interaction(int highlight_item_pos , int total_items)
+{
+  struct pollfd kb_evt = {
+    .fd = STDIN_FILENO, 
+    .events = POLLIN, 
+    0, 
+  };
+
+  int ready = 0 ; 
+  
+  while(!ready)  
+  {
+     ready = poll(&kb_evt ,  1 , ~0) ; 
+     if(~0 == ready) 
      {
-       printf("%s %10s<\012", *(item_list +i) , " "); 
-       tx(exit_attribute_mode) ;  
-     }else 
-       printf("%s %10s\012", *(item_list +i) , " "); 
-     
-     i=-~i ; 
-     cursmov.yline-=~0; 
-   } 
-   
+       perror("poll") ; 
+       break ; 
+     }
+     if(kb_evt.revents &  POLLIN) 
+     {
+       puts("data ready") ; 
+       char  kb  =getc(stdin) ; 
+       printf("key %c \012" , kb) ; 
+       switch((kb & 0xff)) 
+       {
+         //!vim key binding 
+          case  'j':
+          case  'w':
+            if(highlight_item_pos  <= 0 )  
+              highlight_item_pos= total_items-1; 
+            else
+              highlight_item_pos+=~0;
 
-   return default_item_selected ;  
+            break; 
+          case  'k':
+          case  's': 
+            highlight_item_pos-=~0; 
+            break ;
 
+          case 0x20:
+          case 0x0a:
+
+            break;  
+       }
+     } 
+
+  }
+
+  
+  return abs(highlight_item_pos)  % total_items;
 }
