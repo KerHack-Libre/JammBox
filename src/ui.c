@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <poll.h> 
+#include <termios.h> 
 
 
 static int ui_render(char * buffer ,  int wherearea)  
@@ -82,7 +83,7 @@ static int ui_sticky_banner(int side ,  const char * __restrict__ title /*Color 
   return ui_render(buff ,  where) ; 
 }
 
-
+//ui_display_menulist(const char ** , int , const char * where __algn(struct menulocation_t)) ;  
 int ui_display_menulist(const char ** item_list , int highlight_item_pos)    
 {
  
@@ -90,20 +91,28 @@ int ui_display_menulist(const char ** item_list , int highlight_item_pos)
   unsigned int  xcol  = columns >> 2 , 
                 yline = lines >> 2 ; 
 
-  int  menu_location_eara = (xcol << 8 | yline), 
-    default_item_selected =0,
-    i = 0 ;
+  xcol = (xcol << 8 | yline) ;  
+  
+  int default_item_selected =0,i = 0 ;
 
+
+  if(__setterm()) 
+  {
+    fprintf(stderr, "Not able to setting up the terminal\012") ; 
+    return ~0 ;  
+  }
+
+  int choice =0; 
   int proceed=1 ; 
   while(proceed) 
   {
     while(*(item_list+i))  
     {
-      tg(cursor_address ,  xcol  ,yline); 
-      default_item_selected = highlight_default_item_at( highlight_item_pos, i , COLOR_YELLOW); 
+      tg(cursor_address ,(xcol >> 8),yline); 
+      default_item_selected = highlight_default_item_at( highlight_item_pos, i , COLOR_YELLOW+i); 
       if(default_item_selected) 
       {
-        printf("%s %10s<\012", *(item_list +i) , " "); 
+        printf("%s %10s\012", *(item_list +i) , " "); 
         tx(exit_attribute_mode) ;  
       }else 
         printf("%s %10s\012", *(item_list +i) , " "); 
@@ -112,10 +121,14 @@ int ui_display_menulist(const char ** item_list , int highlight_item_pos)
     }
 
     highlight_item_pos  = ui_menu_interaction(highlight_item_pos ,  i)  ;
-    printf("hitp : %i \012" ,  highlight_item_pos) ; 
-    yline= menu_location_eara&0xff ;  
+    choice = (highlight_item_pos & 0xff) ; 
+    highlight_item_pos>>=8;  
+    if(0xff == choice)  break ; 
+    yline= xcol & 0xff ;  
     i=0 ; 
   }
+
+  printf("the item selected is : %i \012", highlight_item_pos>>8) ; 
 
   return default_item_selected ;  
 }
@@ -128,8 +141,8 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
     0, 
   };
 
-  int ready = 0 ; 
-  
+  int ready = 0 ;  
+
   while(!ready)  
   {
      ready = poll(&kb_evt ,  1 , ~0) ; 
@@ -137,23 +150,21 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
      {
        perror("poll") ; 
        break ; 
-     }
+     } 
+
      if(kb_evt.revents &  POLLIN) 
      {
-       puts("data ready") ; 
        char  kb  =getc(stdin) ; 
-       printf("key %c \012" , kb) ; 
        switch((kb & 0xff)) 
        {
-         //!vim key binding 
           case  'j':
           case  'w':
             if(highlight_item_pos  <= 0 )  
               highlight_item_pos= total_items-1; 
             else
               highlight_item_pos+=~0;
-
             break; 
+
           case  'k':
           case  's': 
             highlight_item_pos-=~0; 
@@ -161,13 +172,29 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
 
           case 0x20:
           case 0x0a:
-
-            break;  
+            ready= 0xff;  
+            break; 
        }
      } 
 
   }
 
   
-  return abs(highlight_item_pos)  % total_items;
+  return ((abs(highlight_item_pos)  % total_items) << 8| ready) ; 
+}
+
+static int __setterm(void) 
+{
+
+  unsigned int status = 0 ; 
+  struct  termios  tc_attributes[2] = {0} ; 
+   
+  status |= tcgetattr(STDIN_FILENO ,(tc_attributes)) |  
+            tcgetattr(STDIN_FILENO ,(tc_attributes+1)) ; 
+
+  (tc_attributes+1)->c_lflag &=~(ECHO |ICANON ) ;
+
+  status |=tcsetattr(STDOUT_FILENO ,TCSANOW , (tc_attributes+1)) ; 
+
+  return status  ;
 }

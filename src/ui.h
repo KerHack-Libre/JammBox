@@ -35,6 +35,7 @@
 
 
 
+static int __setterm(void) ; 
 /* Initialise  les termcap disponible  
  * du terminal 
  */
