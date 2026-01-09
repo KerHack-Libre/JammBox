@@ -4,9 +4,10 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <unistd.h>
-#include <string.h> 
+#include <string.h>
+#include <poll.h> 
+#include <termios.h> 
 
-static unsigned  int  termdim =0 ; 
 
 static int ui_render(char * buffer ,  int wherearea)  
 {
@@ -51,64 +52,149 @@ int ui_init(void)
 
      return ~0; 
    }
-
+   
+   //!By default it'll clear the screen  on startup 
    tx(clear_screen); 
-   termdim = columns<<8 | lines ; 
+
+   ui_sticky_banner(BANNER_BOTTOM , BANNER_BOTTOM_STRING) ; 
+   ui_sticky_banner(BANNER_TOP , BANNER_TOP_STRING); 
+
    return OK ;  
 }
 
 //TODO : Add color attribute 
-int ui_draw_layout(int side ,  const char * __restrict__ title /*Color attribute*/)
+static int ui_sticky_banner(int side ,  const char * __restrict__ title /*Color attribute*/)
 {
    
-   int remain_column = termdim>> 8 ;  
+   int remain_column = columns ;  
    char * buff=(char *)00; 
-   int  which_line  = 0;  
    int  where = 0 ; 
+   
    if(strlen(title) >0 )
         remain_column+=~strlen(title); 
 
-   if(side &  HEADER) 
-   { 
-     where = 0 ; 
-   }
+   if(side &  BANNER_TOP ) 
+     where = 0 ; //TOP LINE  
 
-   if(side & FOOTER) 
-     where= termdim  & 0xff;  
-
+   if(side & BANNER_BOTTOM) 
+     where=  lines; //bottom lines   
 
   asprintf(&buff , "%s ?%is\012", title , remain_column);   
   return ui_render(buff ,  where) ; 
 }
 
-
+//ui_display_menulist(const char ** , int , const char * where __algn(struct menulocation_t)) ;  
 int ui_display_menulist(const char ** item_list , int highlight_item_pos)    
-{ 
-  struct coords { 
-     unsigned xcol ,  yline ;  
-  } cursmov = { 
-     columns >> 2  , 
-     lines   >> 2 
-  }; 
-  int default_item_selected =0  ; 
-  char i = 0 ; 
-  while(*(item_list+i))  
+{
+ 
+  //!coords where the menu item should appear 
+  unsigned int  xcol  = columns >> 2 , 
+                yline = lines >> 2 ; 
+
+  xcol = (xcol << 8 | yline) ;  
+  
+  int default_item_selected =0,i = 0 ;
+
+
+  if(__setterm()) 
   {
-     tg(cursor_address ,  cursmov.xcol  , cursmov.yline); 
+    fprintf(stderr, "Not able to setting up the terminal\012") ; 
+    return ~0 ;  
+  }
 
-     default_item_selected = highlight_default_item_at( highlight_item_pos, i , COLOR_YELLOW); 
-     if(default_item_selected) 
+  int choice =0; 
+  int proceed=1 ; 
+  while(proceed) 
+  {
+    while(*(item_list+i))  
+    {
+      tg(cursor_address ,(xcol >> 8),yline); 
+      default_item_selected = highlight_default_item_at( highlight_item_pos, i , COLOR_YELLOW+i); 
+      if(default_item_selected) 
+      {
+        printf("%s %10s\012", *(item_list +i) , " "); 
+        tx(exit_attribute_mode) ;  
+      }else 
+        printf("%s %10s\012", *(item_list +i) , " "); 
+      
+      i=-~i , yline-=~0; 
+    }
+
+    highlight_item_pos  = ui_menu_interaction(highlight_item_pos ,  i)  ;
+    choice = (highlight_item_pos & 0xff) ; 
+    highlight_item_pos>>=8;  
+    if(0xff == choice)  break ; 
+    yline= xcol & 0xff ;  
+    i=0 ; 
+  }
+
+  printf("the item selected is : %i \012", highlight_item_pos>>8) ; 
+
+  return default_item_selected ;  
+}
+
+int ui_menu_interaction(int highlight_item_pos , int total_items)
+{
+  struct pollfd kb_evt = {
+    .fd = STDIN_FILENO, 
+    .events = POLLIN, 
+    0, 
+  };
+
+  int ready = 0 ;  
+
+  while(!ready)  
+  {
+     ready = poll(&kb_evt ,  1 , ~0) ; 
+     if(~0 == ready) 
      {
-       printf("%s %10s<\012", *(item_list +i) , " "); 
-       tx(exit_attribute_mode) ;  
-     }else 
-       printf("%s %10s\012", *(item_list +i) , " "); 
-     
-     i=-~i ; 
-     cursmov.yline-=~0; 
-   } 
+       perror("poll") ; 
+       break ; 
+     } 
+
+     if(kb_evt.revents &  POLLIN) 
+     {
+       char  kb  =getc(stdin) ; 
+       switch((kb & 0xff)) 
+       {
+          case  'j':
+          case  'w':
+            if(highlight_item_pos  <= 0 )  
+              highlight_item_pos= total_items-1; 
+            else
+              highlight_item_pos+=~0;
+            break; 
+
+          case  'k':
+          case  's': 
+            highlight_item_pos-=~0; 
+            break ;
+
+          case 0x20:
+          case 0x0a:
+            ready= 0xff;  
+            break; 
+       }
+     } 
+
+  }
+
+  
+  return ((abs(highlight_item_pos)  % total_items) << 8| ready) ; 
+}
+
+static int __setterm(void) 
+{
+
+  unsigned int status = 0 ; 
+  struct  termios  tc_attributes[2] = {0} ; 
    
+  status |= tcgetattr(STDIN_FILENO ,(tc_attributes)) |  
+            tcgetattr(STDIN_FILENO ,(tc_attributes+1)) ; 
 
-   return default_item_selected ;  
+  (tc_attributes+1)->c_lflag &=~(ECHO |ICANON ) ;
 
+  status |=tcsetattr(STDOUT_FILENO ,TCSANOW , (tc_attributes+1)) ; 
+
+  return status  ;
 }

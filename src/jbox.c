@@ -41,6 +41,12 @@ int main(int ac , char *const *av)
   unsigned int pstatus= EXIT_SUCCESS ; 
   const char *dosimg= (char*)00 ; 
 
+  /*---- list games ----- */ 
+
+  dbox_games(*(av +(ac-1)))  ;
+  return 0 ; 
+  /*--------------------- */
+
   if(!(ac &~(1))) 
   {
     disk_err(-EINVAL) ; 
@@ -85,7 +91,7 @@ int main(int ac , char *const *av)
      err((pstatus^=1) , "Disk Check fail to decode CHS start and end"); 
      goto _eplg ;  
    } 
- 
+
    //!TODO: Trouver un moyen de  verifier si un script de demarrage  est dispo 
    jbox_launch_dosbox_emulator("START.BAT", dosimg ,  chsbytes) ;
   
@@ -233,4 +239,5 @@ static int sanbox_write_log_to(char  *_Nullable journal, int ios_direction)
     dup2(~jfd , STDERR_FILENO) ; 
 
   return ~jfd ; 
-}
+} 
+

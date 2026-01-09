@@ -26,22 +26,23 @@
   tx(tgoto(__VA_ARGS__))   
 
 
-enum  __ui_available_side  { 
-   HEADER = 1,
-   FOOTER  
-}; 
+#define  BANNER_TOP     (1 << 0)  
+#define  BANNER_BOTTOM  (1 << 1) 
 
+//!TODO : Move this  to meson config 
+#define  BANNER_TOP_STRING "Jammbox version 1.0 By KerHack-Libre" 
+#define  BANNER_BOTTOM_STRING "Jammbox PlayGround" 
+
+
+
+static int __setterm(void) ; 
 /* Initialise  les termcap disponible  
  * du terminal 
  */
 int  ui_init(void) ; 
-
-int  ui_draw_layout(int side, const char * __restrict__ _Nullable)  ; 
-
+static int ui_sticky_banner(int side, const char * __restrict__ _Nullable)  ; 
 static int ui_render(char * , int) ; 
-
 int ui_display_menulist(const char ** __item_list , int highlight_npos)  ; 
-
 
 static inline int  highlight_default_item_at(int position  , int target_index , int default_color )  
 {
@@ -52,4 +53,6 @@ static inline int  highlight_default_item_at(int position  , int target_index , 
   tp(set_a_background , default_color) ; 
   return default_color << 8 |  position ;  
 }
+
+int ui_menu_interaction(int  hlg ,  int  total_items) ;  
 #endif //!UI 
