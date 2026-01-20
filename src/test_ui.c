@@ -21,8 +21,9 @@ int main(void)
      (void *)00 
   };  
 
-  ui_display_menulist((const char **)list ,  0) ;  
-  
+  int selected_item   =  ui_display_menulist((const char **)list ,  0);
+   
+  printf("selected item  : %i  %s \012", selected_item , list[selected_item]);  
   
   return 0 ; 
 }
