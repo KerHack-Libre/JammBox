@@ -35,7 +35,7 @@
 
 
 
-static int __setterm(void) ; 
+static int __setterm(struct termios *) ; 
 /* Initialise  les termcap disponible  
  * du terminal 
  */
@@ -46,12 +46,11 @@ int ui_display_menulist(const char ** __item_list , int highlight_npos)  ;
 
 static inline int  highlight_default_item_at(int position  , int target_index , int default_color )  
 {
-   
   if((position ^ target_index)) 
     return 0 ; 
 
   tp(set_a_background , default_color) ; 
-  return default_color << 8 |  position ;  
+  return position  ; 
 }
 
 int ui_menu_interaction(int  hlg ,  int  total_items) ;  

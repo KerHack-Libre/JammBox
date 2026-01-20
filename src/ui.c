@@ -22,7 +22,8 @@ static int ui_render(char * buffer ,  int wherearea)
 
   tg(cursor_address ,0 , wherearea); 
 
-  tp(set_a_background , COLOR_YELLOW) ; 
+  tp(set_a_background , COLOR_YELLOW) ;
+  tx(cursor_invisible) ; 
   fprintf(stdout ,buffer,"") ; 
   tx(exit_attribute_mode) ; 
 
@@ -86,62 +87,71 @@ static int ui_sticky_banner(int side ,  const char * __restrict__ title /*Color 
 //ui_display_menulist(const char ** , int , const char * where __algn(struct menulocation_t)) ;  
 int ui_display_menulist(const char ** item_list , int highlight_item_pos)    
 {
- 
+  int approuved_item = 0  , 
+      proceed  =1 , 
+      default_item_selected =0, idx= 0  , jdx=0 ; 
   //!coords where the menu item should appear 
   unsigned int  xcol  = columns >> 2 , 
                 yline = lines >> 2 ; 
 
   xcol = (xcol << 8 | yline) ;  
-  
-  int default_item_selected =0,i = 0 ;
+  struct  termios t ; 
 
-
-  if(__setterm()) 
+  if(__setterm(&t)) 
   {
     fprintf(stderr, "Not able to setting up the terminal\012") ; 
     return ~0 ;  
   }
 
-  int choice =0; 
-  int proceed=1 ; 
   while(proceed) 
   {
-    while(*(item_list+i))  
+    while(*(item_list+idx))  
     {
       tg(cursor_address ,(xcol >> 8),yline); 
-      default_item_selected = highlight_default_item_at( highlight_item_pos, i , COLOR_YELLOW+i); 
-      if(default_item_selected) 
+      default_item_selected = highlight_default_item_at( highlight_item_pos, idx, COLOR_YELLOW+idx); 
+      //__check_selected_item()
+      proceed^= (approuved_item == 0xff && highlight_item_pos == idx );  
+         
+      //__refresh_item_display((item_list+idx),  highlight_item_pos) ; 
+      if(highlight_item_pos   == idx)  
       {
-        printf("%s %10s\012", *(item_list +i) , " "); 
+        printf("%s %10c\012", *(item_list +idx) , 0x20); 
         tx(exit_attribute_mode) ;  
       }else 
-        printf("%s %10s\012", *(item_list +i) , " "); 
+        printf("%s %10c\012", *(item_list +idx) , 0x20); 
       
-      i=-~i , yline-=~0; 
-    }
+      idx=-~idx , yline-=~0; 
+    } 
 
-    highlight_item_pos  = ui_menu_interaction(highlight_item_pos ,  i)  ;
-    choice = (highlight_item_pos & 0xff) ; 
-    highlight_item_pos>>=8;  
-    if(0xff == choice)  break ; 
+    if(!proceed) break ;  
+    
+    highlight_item_pos  = ui_menu_interaction(highlight_item_pos , idx) ;
+    approuved_item = (highlight_item_pos & 0xff);  
+
+    highlight_item_pos>>=8; 
+    printf("{%i}\012" ,  highlight_item_pos) ; 
+
     yline= xcol & 0xff ;  
-    i=0 ; 
+    idx=0 ; 
   }
 
-  printf("the item selected is : %i \012", highlight_item_pos>>8) ; 
-
-  return default_item_selected ;  
+  //__restor_shell_default_mode; 
+  tx(exit_attribute_mode); 
+  tcsetattr(STDOUT_FILENO ,TCSANOW ,  &t ) ;
+  tx(cursor_visible) ;  
+  return  highlight_item_pos ;  
 }
 
 int ui_menu_interaction(int highlight_item_pos , int total_items)
 {
+  int ready = 0 ;  
+  
   struct pollfd kb_evt = {
     .fd = STDIN_FILENO, 
     .events = POLLIN, 
     0, 
   };
 
-  int ready = 0 ;  
 
   while(!ready)  
   {
@@ -155,6 +165,12 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
      if(kb_evt.revents &  POLLIN) 
      {
        char  kb  =getc(stdin) ; 
+
+       /** 
+        * move the cursor select 
+        * w & s : for up and down 
+        * j & k : same thing for thoses who use vim keys 
+        **/
        switch((kb & 0xff)) 
        {
           case  'j':
@@ -170,31 +186,33 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
             highlight_item_pos-=~0; 
             break ;
 
+            /* Space or Enter to approuve  items  */
           case 0x20:
           case 0x0a:
-            ready= 0xff;  
+            ready= 0xff; 
             break; 
        }
      } 
 
   }
-
-  
-  return ((abs(highlight_item_pos)  % total_items) << 8| ready) ; 
+  int item_index =  (abs(highlight_item_pos) %  total_items) ;  
+  printf("[[%i]]\012", item_index) ; // highlight_item_pos) ; 
+  return (item_index << 8| ready) ; 
 }
 
-static int __setterm(void) 
+static int __setterm(struct termios* termx) 
 {
 
   unsigned int status = 0 ; 
   struct  termios  tc_attributes[2] = {0} ; 
-   
+  
   status |= tcgetattr(STDIN_FILENO ,(tc_attributes)) |  
             tcgetattr(STDIN_FILENO ,(tc_attributes+1)) ; 
 
   (tc_attributes+1)->c_lflag &=~(ECHO |ICANON ) ;
 
   status |=tcsetattr(STDOUT_FILENO ,TCSANOW , (tc_attributes+1)) ; 
+  *termx =  *tc_attributes ; 
 
-  return status  ;
+  return  status ; 
 }
