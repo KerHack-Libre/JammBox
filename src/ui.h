@@ -12,8 +12,12 @@
 #if !defined(UI)
 #define UI 
 
+#include <stdlib.h> 
 #include <curses.h> 
 #include <term.h> 
+#include <termios.h> 
+#include <string.h> 
+
 #include "attr.h" 
 
 #define tx(xcap)\
@@ -29,13 +33,53 @@
 #define  BANNER_TOP     (1 << 0)  
 #define  BANNER_BOTTOM  (1 << 1) 
 
+//> Designed for termios terminal configuration 
+//+ use by __configure_term(mode) 
+#define INIT   1
+#define BACKUP 2 
+
+
 //!TODO : Move this  to meson config 
 #define  BANNER_TOP_STRING "Jammbox version 1.0 By KerHack-Libre" 
 #define  BANNER_BOTTOM_STRING "Jammbox PlayGround" 
 
+//used to  restor  the default behavior of the terminal 
+extern  struct  termios *__backup_tcios; 
 
+static inline  int __configure_term(int mode)
+{
+  unsigned int status = 0 ; 
+  if(mode & INIT) 
+   {
+     struct  termios tcios[2] = {0} ; 
+     status = tcgetattr(0 , tcios ) | tcgetattr(0 , (tcios+1));
+     if(!__backup_tcios) 
+     {
+        __backup_tcios = malloc(sizeof(*__backup_tcios));  
+        if(!__backup_tcios)  
+          return  ~0 ; 
+        
+        //  The first item is used to restor  or backup the initial 
+        //+ state of the terminal 
+        memcpy(__backup_tcios ,  (tcios+0) ,  sizeof(*(tcios))) ; 
+     } 
 
-static int __setterm(struct termios *) ; 
+     //  This dummy configuration is enought ... 
+     (tcios+1)->c_lflag  &=~(ICANON | ECHOE); 
+     status|=tcsetattr(0 , TCSANOW ,(tcios+1)) ;  
+   } 
+  if(mode & BACKUP) 
+  {
+     if(!__backup_tcios)
+       return ~0 ; 
+    
+     status  |= tcsetattr(1, TCSANOW, __backup_tcios)  ; 
+     free(__backup_tcios) , __backup_tcios = 0 ; 
+  }
+
+  return status ; 
+}
+
 /* Initialise  les termcap disponible  
  * du terminal 
  */

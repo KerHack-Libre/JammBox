@@ -6,8 +6,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <poll.h> 
-#include <termios.h> 
+#include <errno.h> 
 
+
+struct termios  * __backup_tcios = (void*)0 ;  
 
 static int ui_render(char * buffer ,  int wherearea)  
 {
@@ -54,11 +56,15 @@ int ui_init(void)
      return ~0; 
    }
    
-   //!By default it'll clear the screen  on startup 
-   tx(clear_screen); 
-
-   ui_sticky_banner(BANNER_BOTTOM , BANNER_BOTTOM_STRING) ; 
-   ui_sticky_banner(BANNER_TOP , BANNER_TOP_STRING); 
+   //!By default it'll clear the screen  on startup  
+   
+   {  /*Intial configuration */  
+      tx(clear_screen); 
+      tx(cursor_invisible) ;  
+      ui_sticky_banner(BANNER_BOTTOM , BANNER_BOTTOM_STRING) ; 
+      ui_sticky_banner(BANNER_TOP , BANNER_TOP_STRING); 
+      __configure_term(INIT) ; 
+   } 
 
    return OK ;  
 }
@@ -89,20 +95,22 @@ int ui_display_menulist(const char ** item_list , int highlight_item_pos)
 {
   int approuved_item = 0  , 
       proceed  =1 , 
-      default_item_selected =0, idx= 0  , jdx=0 ; 
+      default_item_selected =0, idx=0; 
+
   //!coords where the menu item should appear 
   unsigned int  xcol  = columns >> 2 , 
                 yline = lines >> 2 ; 
 
   xcol = (xcol << 8 | yline) ;  
   struct  termios t ; 
-
+  /*   
   if(__setterm(&t)) 
   {
     fprintf(stderr, "Not able to setting up the terminal\012") ; 
     return ~0 ;  
   }
 
+  */ 
   while(proceed) 
   {
     while(*(item_list+idx))  
@@ -137,14 +145,14 @@ int ui_display_menulist(const char ** item_list , int highlight_item_pos)
 
   //__restor_shell_default_mode; 
   tx(exit_attribute_mode); 
-  tcsetattr(STDOUT_FILENO ,TCSANOW ,  &t ) ;
+  __configure_term(BACKUP) ; 
   tx(cursor_visible) ;  
   return  highlight_item_pos ;  
 }
 
 int ui_menu_interaction(int highlight_item_pos , int total_items)
 {
-  int ready = 0 ;  
+  int selected_code = 0  , ready = 0 ;  
   
   struct pollfd kb_evt = {
     .fd = STDIN_FILENO, 
@@ -153,12 +161,15 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
   };
 
 
-  while(!ready)  
+  while(!ready)   
   {
-     ready = poll(&kb_evt ,  1 , ~0) ; 
-     if(~0 == ready) 
+    do 
+      ready = poll(&kb_evt ,1 ,~0) ; 
+    while(errno == EINTR); 
+
+    if(~0 == ready) 
      {
-       perror("poll") ; 
+       perror("poll") ;  
        break ; 
      } 
 
@@ -172,7 +183,7 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
         * j & k : same thing for thoses who use vim keys 
         **/
        switch((kb & 0xff)) 
-       {
+       { 
           case  'j':
           case  'w':
             if(highlight_item_pos  <= 0 )  
@@ -189,30 +200,13 @@ int ui_menu_interaction(int highlight_item_pos , int total_items)
             /* Space or Enter to approuve  items  */
           case 0x20:
           case 0x0a:
-            ready= 0xff; 
-            break; 
+            selected_code  = 0xff; 
+            break;   
        }
      } 
 
   }
   int item_index =  (abs(highlight_item_pos) %  total_items) ;  
-  printf("[[%i]]\012", item_index) ; // highlight_item_pos) ; 
-  return (item_index << 8| ready) ; 
+  return (item_index << 8| selected_code) ; 
 }
 
-static int __setterm(struct termios* termx) 
-{
-
-  unsigned int status = 0 ; 
-  struct  termios  tc_attributes[2] = {0} ; 
-  
-  status |= tcgetattr(STDIN_FILENO ,(tc_attributes)) |  
-            tcgetattr(STDIN_FILENO ,(tc_attributes+1)) ; 
-
-  (tc_attributes+1)->c_lflag &=~(ECHO |ICANON ) ;
-
-  status |=tcsetattr(STDOUT_FILENO ,TCSANOW , (tc_attributes+1)) ; 
-  *termx =  *tc_attributes ; 
-
-  return  status ; 
-}
