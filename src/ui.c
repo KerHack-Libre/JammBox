@@ -25,7 +25,6 @@ static int ui_render(char * buffer ,  int wherearea)
   tg(cursor_address ,0 , wherearea); 
 
   tp(set_a_background , COLOR_YELLOW) ;
-  tx(cursor_invisible) ; 
   fprintf(stdout ,buffer,"") ; 
   tx(exit_attribute_mode) ; 
 
@@ -34,7 +33,6 @@ _free_buff:
   
   return  exit_status ; 
 }
-
 
 int ui_init(void)   
 {
@@ -56,21 +54,18 @@ int ui_init(void)
      return ~0; 
    }
    
-   //!By default it'll clear the screen  on startup  
-   
-   {  /*Intial configuration */  
-      tx(clear_screen); 
-      tx(cursor_invisible) ;  
-      ui_sticky_banner(BANNER_BOTTOM , BANNER_BOTTOM_STRING) ; 
-      ui_sticky_banner(BANNER_TOP , BANNER_TOP_STRING); 
-      __configure_term(INIT) ; 
+   {  /* Stages running */  
+      tx(clear_screen);                                             //> Clear the screen
+      tx(cursor_invisible) ;                                        //> Cursor invisible 
+      ui_sticky_banner(BANNER_BOTTOM , BANNER_BOTTOM_STRING) ;      //> Draw  banner at the bottom  
+      ui_sticky_banner(BANNER_TOP , BANNER_TOP_STRING);             //> Draw  banner at top  
+      __configure_term(INIT) ;                                      //> configure terminal attribute 
    } 
 
    return OK ;  
 }
 
-//TODO : Add color attribute 
-static int ui_sticky_banner(int side ,  const char * __restrict__ title /*Color attribute*/)
+static int ui_sticky_banner(int side ,  const char * __restrict__ title)
 {
    
    int remain_column = columns ;  
@@ -93,7 +88,7 @@ static int ui_sticky_banner(int side ,  const char * __restrict__ title /*Color 
 //ui_display_menulist(const char ** , int , const char * where __algn(struct menulocation_t)) ;  
 int ui_display_menulist(const char ** item_list , int highlight_item_pos)    
 {
-  int approuved_item = 0  , 
+  int selected_item = 0  , 
       proceed  =1 , 
       default_item_selected =0, idx=0; 
 
@@ -102,25 +97,18 @@ int ui_display_menulist(const char ** item_list , int highlight_item_pos)
                 yline = lines >> 2 ; 
 
   xcol = (xcol << 8 | yline) ;  
-  struct  termios t ; 
-  /*   
-  if(__setterm(&t)) 
-  {
-    fprintf(stderr, "Not able to setting up the terminal\012") ; 
-    return ~0 ;  
-  }
-
-  */ 
+ 
   while(proceed) 
   {
     while(*(item_list+idx))  
     {
       tg(cursor_address ,(xcol >> 8),yline); 
-      default_item_selected = highlight_default_item_at( highlight_item_pos, idx, COLOR_YELLOW+idx); 
-      //__check_selected_item()
-      proceed^= (approuved_item == 0xff && highlight_item_pos == idx );  
-         
-      //__refresh_item_display((item_list+idx),  highlight_item_pos) ; 
+      highlight_default_item_at( highlight_item_pos, idx, COLOR_YELLOW+idx); 
+      
+      proceed^= (selected_item == 0xff && highlight_item_pos == idx );  
+      
+      //> Refreshing  items display by highlighting 
+      //+ the current selected item ... 
       if(highlight_item_pos   == idx)  
       {
         printf("%s %10c\012", *(item_list +idx) , 0x20); 
@@ -132,25 +120,19 @@ int ui_display_menulist(const char ** item_list , int highlight_item_pos)
     } 
 
     if(!proceed) break ;  
-    
+
     highlight_item_pos  = ui_menu_interaction(highlight_item_pos , idx) ;
-    approuved_item = (highlight_item_pos & 0xff);  
-
+    selected_item = (highlight_item_pos & 0xff);  
     highlight_item_pos>>=8; 
-    printf("{%i}\012" ,  highlight_item_pos) ; 
-
     yline= xcol & 0xff ;  
     idx=0 ; 
   }
 
-  //__restor_shell_default_mode; 
-  tx(exit_attribute_mode); 
-  __configure_term(BACKUP) ; 
-  tx(cursor_visible) ;  
+  __restor_shell_default_mode() ;  
   return  highlight_item_pos ;  
 }
 
-int ui_menu_interaction(int highlight_item_pos , int total_items)
+static int ui_menu_interaction(int highlight_item_pos , int total_items)
 {
   int selected_code = 0  , ready = 0 ;  
   

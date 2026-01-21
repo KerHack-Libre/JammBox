@@ -65,7 +65,7 @@ static inline  int __configure_term(int mode)
      } 
 
      //  This dummy configuration is enought ... 
-     (tcios+1)->c_lflag  &=~(ICANON | ECHOE); 
+     (tcios+1)->c_lflag &=~(ICANON | ECHO);  
      status|=tcsetattr(0 , TCSANOW ,(tcios+1)) ;  
    } 
   if(mode & BACKUP) 
@@ -80,14 +80,6 @@ static inline  int __configure_term(int mode)
   return status ; 
 }
 
-/* Initialise  les termcap disponible  
- * du terminal 
- */
-int  ui_init(void) ; 
-static int ui_sticky_banner(int side, const char * __restrict__ _Nullable)  ; 
-static int ui_render(char * , int) ; 
-int ui_display_menulist(const char ** __item_list , int highlight_npos)  ; 
-
 static inline int  highlight_default_item_at(int position  , int target_index , int default_color )  
 {
   if((position ^ target_index)) 
@@ -97,5 +89,22 @@ static inline int  highlight_default_item_at(int position  , int target_index , 
   return position  ; 
 }
 
-int ui_menu_interaction(int  hlg ,  int  total_items) ;  
+static inline int  __restor_shell_default_mode(void) 
+{
+   __configure_term(BACKUP) ; 
+   tx(exit_attribute_mode);  
+   tx(cursor_visible) ;  
+} 
+
+
+static int ui_sticky_banner(int side, const char * __restrict__ _Nullable)  ; 
+static int ui_render(char * , int) ; 
+static int  ui_menu_interaction(int  hlg ,  int  total_items) ;  
+
+/* Initialise  les termcap disponible  
+ * du terminal 
+ */
+extern int  ui_init(void) ; 
+extern int  ui_display_menulist(const char ** _Nonnull __item_list , int highlight_npos)  ; 
+
 #endif //!UI 
