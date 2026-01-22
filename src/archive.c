@@ -51,7 +51,7 @@ int archive_check(const char * archive_filename)
   switch( (signature >> 0x10))  
   {
     case NON_EMPTY_ARCHIVE:
-      return  0 ;  
+      return  0 ;  // > GOOD   
     case EMPTY_ARCHIVE: 
       return 1 ; 
     case SPANNED_ARCHIVE:

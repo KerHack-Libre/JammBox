@@ -58,12 +58,7 @@ static char * archive_get_dirent_path_location(const char *  __restrict__  _Nonn
   # warning  "LibZip not Found!"
 #endif /*! _USE_ZIP_ARCHIVE */ 
 
-
 #if defined(__cplusplus) 
 }
 #endif 
-
-
-
 #endif //!ARCHIVE  
-

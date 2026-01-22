@@ -99,11 +99,8 @@ static inline int  __restor_shell_default_mode(void)
 
 static int ui_sticky_banner(int side, const char * __restrict__ _Nullable)  ; 
 static int ui_render(char * , int) ; 
-static int  ui_menu_interaction(int  hlg ,  int  total_items) ;  
+static int ui_menu_interaction(int  hlg ,  int  total_items) ;  
 
-/* Initialise  les termcap disponible  
- * du terminal 
- */
 extern int  ui_init(void) ; 
 extern int  ui_display_menulist(const char ** _Nonnull __item_list , int highlight_npos)  ; 
 
