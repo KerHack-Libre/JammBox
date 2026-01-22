@@ -1,6 +1,4 @@
-//
-/*
- */
+//SPDX-License-Identifier:GPL-3.0 
 
 #include <unistd.h>
 #include <stdio.h> 
@@ -99,42 +97,50 @@ int  dbox_autorun(const char *  restrict  start_script,
 }  
 
 
-char ** dbox_games(const char * restrict game_path) 
-{
+char **dbox_games(const char * restrict game_path) 
+{ 
+
+  struct dirent **list = (void *)0 ; 
+  int direntries  = 0   , idx = 0 ;  
+  ssize_t  len =  ~0 ; 
+  char *s =(void *) 0  , 
+       *root_path = strdup(game_path) ;   
+
+  //> TODO : Set limit of maximum games 
   char **founded_games = malloc(sizeof(char)  * 100 * 100 ) ;  
   if(!founded_games) 
-  {
     return (void *) 0 ; 
-  }
-  struct dirent **list = (void *)0 ; 
-  int direntries= scandir( game_path , &list , filter , alphasort) ; 
+ 
+  //> formating the root game path 
+  //+ looking for the last '/'
+ 
+  s = strrchr(root_path , 0x2f) ; 
+  len+= strlen(root_path) ;  
   
-  int idx = 0 ; 
+  if(!(len ^ (s - root_path)))  
+    free(root_path) , 
+      root_path = strndup(game_path , len)  ; 
+  
+  direntries= scandir(game_path , &list , filter , alphasort) ; 
   while(direntries--) 
-  {
-    printf("-> %s \n" , list[direntries]->d_name ); 
-    *(founded_games+idx) =  strdup(list[direntries]->d_name ) ; 
+  {  
+    //*(founded_games+idx) =   strdup(list[direntries]->d_name ) ; 
+    asprintf((founded_games+idx) , "%s/%s",root_path  , list[direntries]->d_name) ; 
+    printf("-> %s \n" , *(founded_games +idx )) ;  // list[direntries]->d_name ); 
     idx=-~idx ; 
-  } 
-
+  }  
+  
   *(founded_games - (~idx)) =  (void *)0 ; 
 
+  free(root_path)  , root_path = 0 ; 
   return founded_games ; 
   
 }
 static int filter(const struct  dirent * dirent) 
 {
- 
-  //!NOTE : NOT a solide  verification  should go deep than just 
-  //        checking end extension name ! <WARNING> 
-  /*  
-  char *end_extention =  strrchr(dirent->d_name ,  0x2e);
-  
- 
-  if( 0 == (strcmp(end_extention , ".zip"))|
-      0 == (strcmp(end_extention , ".img")))
-    puts("ok") ; 
- */ 
+  // char  *extension  = _endwith(dirent->d_name , ".zip" , ".img") ; 
+  //> ! looking for zip file 
+  char * extension  = strstr(dirent->d_name , ".zip") ;  
 
-  return  !(!(dirent->d_type ^ (1<<8)))   ; 
+  return  ((!!(dirent->d_type ^ DT_DIR)) && extension)  ; 
 }
