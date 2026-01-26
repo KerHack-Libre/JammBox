@@ -95,8 +95,9 @@ int  dbox_autorun(const char *  restrict  start_script,
 
   return sandbox((char ** ) cmdmem_dump ) ; 
 }  
-
-
+  
+//!TODO : static  void  dbox_deallocate_games(const char ** restrict list_of_games)  
+//+ Should deallocated the list of game from the heap  
 char **dbox_games(const char * restrict game_path) 
 { 
 
@@ -106,41 +107,37 @@ char **dbox_games(const char * restrict game_path)
   char *s =(void *) 0  , 
        *root_path = strdup(game_path) ;   
 
-  //> TODO : Set limit of maximum games 
   char **founded_games = malloc(sizeof(char)  * 100 * 100 ) ;  
   if(!founded_games) 
     return (void *) 0 ; 
  
-  //> formating the root game path 
-  //+ looking for the last '/'
- 
+  //> __normalize_end_path(root_path)
   s = strrchr(root_path , 0x2f) ; 
   len+= strlen(root_path) ;  
-  
+   
   if(!(len ^ (s - root_path)))  
     free(root_path) , 
       root_path = strndup(game_path , len)  ; 
   
-  direntries= scandir(game_path , &list , filter , alphasort) ; 
+  direntries= scandir(game_path , &list , preference , alphasort); 
+  if(!direntries)  
+    return (void * )0 ; /*  No entry found ! */ 
+
   while(direntries--) 
   {  
-    //*(founded_games+idx) =   strdup(list[direntries]->d_name ) ; 
     asprintf((founded_games+idx) , "%s/%s",root_path  , list[direntries]->d_name) ; 
-    printf("-> %s \n" , *(founded_games +idx )) ;  // list[direntries]->d_name ); 
+    printf("-> %s \n" , *(founded_games +idx ));  
     idx=-~idx ; 
   }  
   
   *(founded_games - (~idx)) =  (void *)0 ; 
 
   free(root_path)  , root_path = 0 ; 
-  return founded_games ; 
-  
+  return founded_games ;  
 }
-static int filter(const struct  dirent * dirent) 
+//!Act like a custom filter
+static int preference(const struct  dirent * dirent) 
 {
-  // char  *extension  = _endwith(dirent->d_name , ".zip" , ".img") ; 
-  //> ! looking for zip file 
   char * extension  = strstr(dirent->d_name , ".zip") ;  
-
   return  ((!!(dirent->d_type ^ DT_DIR)) && extension)  ; 
 }

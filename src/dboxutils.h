@@ -62,6 +62,6 @@ int dbox_autorun(const char * __restrict__ internal_start_prog,
 
 char ** dbox_games(const char * __restrict__  dosbox_game_path)  ;
 
-static int filter(const struct dirent * dirent);  
+static int preference(const struct dirent * dirent);  
 
 #endif /* DBUTILS */

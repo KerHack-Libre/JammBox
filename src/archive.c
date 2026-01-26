@@ -15,12 +15,12 @@ zip_error_t *zerr =(void*)0 ;
 
 char * archive_file_root_dir=(void *)0 ; 
 
-int  archive_open(const char  *restrict archive_file) 
+unsigned int  archive_open(const char  *restrict archive_file) 
 { 
 
-  int zerrno =0 ;  
-  
-  if(archive_check(archive_file))  
+  int zerrno =0 ; 
+  unsigned int check_status =  archive_check(archive_file) ; 
+  if(~0 == check_status)
     return  ~0;  
 
   za = zip_open(archive_file , 0x10,&zerrno);  
@@ -31,17 +31,21 @@ int  archive_open(const char  *restrict archive_file)
   } 
   
   archive_file_root_dir = archive_get_dirent_path_location(archive_file); 
-  return 0 ; 
+  return check_status ;  
 }
 
-int archive_check(const char * archive_filename)
+unsigned int archive_check(const char * archive_filename)
 {
-  uint32_t signature= 0x0  ;  
+  uint32_t signature= 0x0; 
+  mode_t regusr_mode = 0 ;
+  unsigned int check_status = ~0 ; 
 
   int fd  = open(archive_filename ,  O_RDONLY) ; 
   if(!(~0 ^ fd)) 
     return ~0; 
-  
+
+  regusr_mode = __archive_get_stat(fd) ;  
+
   read(fd ,  &signature , sizeof(signature)) ; 
   close(fd) ; 
 
@@ -51,15 +55,17 @@ int archive_check(const char * archive_filename)
   switch( (signature >> 0x10))  
   {
     case NON_EMPTY_ARCHIVE:
-      return  0 ;  // > GOOD   
+      check_status = 1 ;break;     
     case EMPTY_ARCHIVE: 
-      return 1 ; 
+      check_status=  2 ;break; 
     case SPANNED_ARCHIVE:
-      return 2 ; 
+      check_status = 4 ; break;  
   }
-  
-  return ~0 ; 
-  
+  if(~0 ==check_status) 
+    return ~0 ; 
+
+  return (check_status << 0x10) | regusr_mode ; 
+
 }
 static char  * archive_get_dirent_path_location(const char * restrict archive_file) 
 {
@@ -75,34 +81,40 @@ static char  * archive_get_dirent_path_location(const char * restrict archive_fi
   return  strndup(archive_file , len);  
 }
 
-char * archive_scan(zip_t * za) 
+char * archive_scan(zip_t * za , unsigned  int status_mode) 
 { 
   zip_int64_t total_entries=0;  
   zip_stat_t   zstbuff ;  
 
+  //> The uncompressed_data is aligned to fit with struct __unzip_t  data structure  
+  //+ Please see how __unzip_t is defined  @ archive.h header .... 
+  //-------------------------------------------------------------------------------
   char *uncompressed_data  __algn(struct __unzip_t) = (char *)00 ; 
 
   total_entries = zip_get_num_entries(za , ZIP_FL_UNCHANGED);  
-  if(!(~0 ^  total_entries))  
+  if( 0 == total_entries)  
     return (void *)~0  ; //ARCHIVE_ERR_ZIP_ENTRIES 
 
   unsigned int  entry =~0 ;
   while(++entry   < total_entries) 
   {
-     if(zip_stat_index(za ,entry, 0  ,  &zstbuff))
+     int rc  = zip_stat_index(za ,entry, 0  ,  &zstbuff) ; 
+     if(rc) 
        continue ;  //!NOTE : silent ! 
-  
-     uncompressed_data = (char *) archive_populate(za, &zstbuff) ;  //,destination_location);  
+ 
+     //!FIXME : I supposed that, the archive should have only   1 entry ...  
+     //!TODO  : Do not populate  archive file when the contains are already available
+     uncompressed_data = strdup((char *) archive_populate(za, &zstbuff,  status_mode)) ;
+     
      if(!uncompressed_data ||  (void *)~0  == uncompressed_data) 
        continue ; 
   }
 
-  free(archive_file_root_dir)  , archive_file_root_dir =0  ;    
-  return   uncompressed_data ;  
-
+  free(archive_file_root_dir)  , archive_file_root_dir =0 ; 
+  return uncompressed_data; 
 } 
 
-static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat) 
+static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat , unsigned int permode) 
 {
   
   unzip_t  * unzip = (unzip_t *) 00 ; 
@@ -114,12 +126,8 @@ static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat)
   if(!target_file) 
     return 0; 
 
-  /*TODO : Appliquer les meme permission que le ficher zip source (en entre) */
-  //mode_t regusr =  archive_get_umodt(zip_entry_file_stat->name) ; 
-
   asprintf(&path, "%s/%s", archive_file_root_dir , zip_entry_file_stat->name) ; 
-  fd ^= open(path ,O_CREAT| O_EXCL | O_RDWR, 
-      S_IRUSR | S_IWUSR);  
+  fd ^= open(path ,O_CREAT| O_EXCL | O_RDWR,permode)    ; 
 
   free(archive_file_root_dir); 
   if(!fd)  

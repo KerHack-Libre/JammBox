@@ -87,7 +87,10 @@ static int ui_sticky_banner(int side ,  const char * __restrict__ title)
 
 //ui_display_menulist(const char ** , int , const char * where __algn(struct menulocation_t)) ;  
 int ui_display_menulist(const char ** item_list , int highlight_item_pos)    
-{
+{ 
+  if(!item_list)
+    return ~0  ; 
+
   int selected_item = 0  , 
       proceed  =1 , 
       default_item_selected =0, idx=0; 

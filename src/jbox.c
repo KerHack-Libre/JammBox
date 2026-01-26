@@ -14,11 +14,16 @@
 #include "diskcheck.h" 
 #include "dboxutils.h"
 #include "archive.h" 
+#include "ui.h" 
 
 #ifdef USE_ZIP_ARCHIVE 
 extern zip_t *za;  
 #endif 
 
+#define jbox_goto(endprog_status , errcode , ...)\
+      endprog_status;do{disk_err(errcode);err(errcode,__VA_ARGS__); goto _eplg;}while(0)  
+
+#define GAMES_PATH_LOCATION  "games/princeofpersia"
 extern char **environ ; 
 
 #define  DOSBOX_CHSBYTES_ORDER(chsbytes) \
@@ -33,39 +38,55 @@ static int scan_pte(mbr_t *) ;
 static int jbox_launch_dosbox_emulator(const char    * __restrict__, 
                                        char const    * __restrict__, 
                                        global_chs_t  * __restrict__ ) ; 
-int jbox_create_sandbox(char **_Nonnull memdump); 
+
+int jbox_create_sandbox(char **_Nonnull stream_memory_dump); 
+
 static int sanbox_write_log_to(char  *_Nullable journal , int ios_direction) ; 
 
 int main(int ac , char *const *av) 
 {
   unsigned int pstatus= EXIT_SUCCESS ; 
   const char *dosimg= (char*)00 ; 
-
-  /*---- list games ----- */ 
-
-  dbox_games(*(av +(ac-1)))  ;
-  return 0 ; 
-  /*--------------------- */
+  char **available_games = (char **) 00; 
+  unsigned int selected_game =  0 ; 
 
   if(!(ac &~(1))) 
-  {
-    disk_err(-EINVAL) ; 
-    err( (pstatus^=1),"Require DOS/MBR image or  zip archive file (should have the image file inside)")  ; 
-    goto _eplg ; 
-  }
-  
-  /*NOTE : it can be a zip or img file */
-  dosimg =  *(av+1) ;    
-#if defined(USE_ZIP_ARCHIVE)
-  if(!archive_open(dosimg)) 
-  {  
-    struct __unzip_t * data =(struct __unzip_t *) archive_scan(za);
+  { 
+    
+#if defined(JBOX_TUI_MENU) && JBOX_TUI_MENU ==1
+    available_games =  dbox_games(GAMES_PATH_LOCATION); 
+    
+    ui_init() ; 
+    selected_game =  ui_display_menulist((const char ** )available_games ,0) ;
+    if(~0 == selected_game) 
+       disk_err(-EINVAL) ; 
+
+    dosimg = strdup(*(available_games+selected_game)) ;  
+
+#else  
+    pstatus^= jbox_goto(1, -EINVAL,"Require DOS/MBR image or zip archive file\012")  ; 
+#endif 
+  }else  
+    dosimg =  strdup(*(av+(ac -1)))  ; 
+   
+  printf("-> Game  : %s  \012",  dosimg) ; 
+
+#if defined(USE_ZIP_ARCHIVE) 
+  unsigned int status_mode =  archive_open(dosimg) ; 
+  if(~0 != status_mode)  
+  { 
+    status_mode&= 0xffff ; 
+    struct __unzip_t * data =(struct __unzip_t *) archive_scan(za ,  status_mode);
     if(!data) 
     {
-       err((pstatus^=1),  "Fail to unzip entry archive") ; 
-       goto _eplg; 
-    }
-    dosimg = strdup(data->_filename);  
+       free(dosimg)  , dosimg =00 ; 
+       pstatus^=jbox_goto(1 , -ENODATA, "Fail to uncompress archive entry") ; 
+    }  
+    puts("\011 ... OK") ; 
+    printf("disks found at  %s \012" , data->_filename) ;  
+    //free(dosimg);  dosimg =00 ;  
+  
+    dosimg = strdup( ((unzip_t *)data)->_filename);  
   }
   
 #endif 
