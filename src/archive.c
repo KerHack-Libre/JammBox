@@ -119,7 +119,7 @@ static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat ,
   
   unzip_t  * unzip = (unzip_t *) 00 ; 
   zip_file_t * target_file= (zip_file_t *) 00 ; 
-  unsigned int fd = ~0 ;   
+  unsigned int fd = ~0 ,  pops = 0 ;  
   char * path =  (char*)00 ;  
 
   target_file = zip_fopen_index(za ,  zip_entry_file_stat->index ,0 ); 
@@ -132,12 +132,10 @@ static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat ,
   free(archive_file_root_dir); 
   if(!fd)  
   { 
-    //* NOTE : ignore si le fichier existe deja */ 
     if(0x11 != errno)   
-      //!probablement une erreur no reconnue 
       return (void *)~0; 
 
-    errno = 0 ;  
+    pops = errno,errno = 0 ;  
   }
   
   fd=~fd ; 
@@ -148,6 +146,17 @@ static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat ,
   unzip->_filename = strdup(path) ; 
   unzip->_size = zip_entry_file_stat->size;  
   free(path) , path=0 ; 
+
+  /* > By default this flag is not defined. And the default
+   * + behavior  is to skip  re-populate the contains of
+   * + archive file. When this flag is set a  compile time, that's mean 
+   * + every time you execute the code it'll propagate the file(s)
+   * + from compressed archive! 
+   * */
+#if !defined(ARCHIVE_FORCE_POPULATE) 
+  if(__archive_auto_cancel_propagation(zip_entry_file_stat,  pops))
+    goto __free_target_file ;
+#endif 
   
   char *content_buffer = (char*) malloc(zip_entry_file_stat->size);
   if (!content_buffer) 
