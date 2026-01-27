@@ -64,6 +64,11 @@ static __always_inline mode_t  __archive_get_stat(unsigned int  raw_archive_fd)
     return ~0 ; 
 
   return sb.st_mode & 0x1ff ;  
+} 
+static __always_inline _Bool __archive_auto_cancel_propagation(zip_stat_t  * restrict  st_archive , 
+    int check_code)   
+{
+  return (0 < st_archive->size && !(0x11^check_code));  
 }
 #else 
   # warning  "LibZip not Found!"
