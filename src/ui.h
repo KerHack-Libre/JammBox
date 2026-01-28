@@ -2,9 +2,9 @@
 /*
  * ui.h
  *
- * Interface d'utilisateur sur le terminal  (TUI) 
- * Permet a l'utilisateur  d'interagir avec le launcher 
- * via un menu. 
+ * Basic Terminal user interface (TUI)  
+ * Allows the user  to interact with the launcher 
+ * via a basic simple interactive menu. 
  * 
  * Copyright(c) 2025, Umar Ba <jUmarB@protonmail.com> 
  */
@@ -33,9 +33,9 @@
 #define  BANNER_TOP     (1 << 0)  
 #define  BANNER_BOTTOM  (1 << 1) 
 
-//> Designed for termios terminal configuration 
-//+ use by __configure_term(mode) 
-#define INIT   1
+/* Designed for termios terminal configuration 
+ * needed by __configure_term(mode) */
+#define INIT   1 
 #define BACKUP 2 
 
 
@@ -43,8 +43,8 @@
 #define  BANNER_TOP_STRING "Jammbox version 1.0 By KerHack-Libre" 
 #define  BANNER_BOTTOM_STRING "Jammbox PlayGround" 
 
-//used to  restor  the default behavior of the terminal 
-extern  struct  termios *__backup_tcios; 
+/* Used to restor  the default behavior of the terminal */
+extern  struct  termios *__backup_tcios;
 
 static inline  int __configure_term(int mode)
 {
@@ -59,12 +59,13 @@ static inline  int __configure_term(int mode)
         if(!__backup_tcios)  
           return  ~0 ; 
         
-        //  The first item is used to restor  or backup the initial 
-        //+ state of the terminal 
+        /* The first item is used to restore  or backup the initial 
+         * state of the terminal 
+         */
         memcpy(__backup_tcios ,  (tcios+0) ,  sizeof(*(tcios))) ; 
      } 
 
-     //  This dummy configuration is enought ... 
+     //This dummy configuration is enought ... 
      (tcios+1)->c_lflag &=~(ICANON | ECHO);  
      status|=tcsetattr(0 , TCSANOW ,(tcios+1)) ;  
    } 
@@ -99,9 +100,9 @@ static inline int  __restor_shell_default_mode(void)
 
 static int ui_sticky_banner(int side, const char * __restrict__ _Nullable)  ; 
 static int ui_render(char * , int) ; 
-static int ui_menu_interaction(int  hlg ,  int  total_items) ;  
+static int ui_menu_interaction(int  hlg ,  int total_items) ;  
 
 extern int  ui_init(void) ; 
 extern int  ui_display_menulist(const char ** _Nonnull __item_list , int highlight_npos)  ; 
 
-#endif //!UI 
+#endif /* UI */ 

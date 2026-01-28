@@ -1,7 +1,7 @@
 //SPDX-License-Identifier:GPL-3.0 
 /* 
  * dboxutils.h
- * Routine d'operation qui sert uniquement a dosbox.
+ * Operation routine that is only used for dosbox
  *
  * Copyright(c) 2025, Umar Ba <jUmarB@protonmail.com> 
  */
@@ -10,6 +10,7 @@
 #define DBUTILS
 
 #include "archive.h" 
+#include "attr.h" 
 
 #define EMULNAME(target_emulator)  # target_emulator
 
@@ -22,7 +23,6 @@ enum DOSBOX_DIRECTIVES {
   /* More to come... */
 }; 
 
-
 #define  FMT_IMGMOUNT\
   "%s %c %s -size %li,%i,%i,%i ? %c: " 
 
@@ -31,7 +31,6 @@ enum DOSBOX_DIRECTIVES {
 
 #define CMDIR(__directive) \
   #__directive
-
 
 struct dosbox_entry_t  
 { 
@@ -42,26 +41,28 @@ struct dosbox_entry_t
   struct __chs_t *end ;
 #endif   
 };
-typedef int (*sandbox_ctx)(char **)  ; 
+typedef  typeof(int (char ** )) *sandbox_ctx; 
 
 extern char * dbox_emulator; 
 extern FILE * memrecord_ptr ; 
+
+static int dbox_game_location_filter(const struct dirent * _Nonnull dirent);
 
 /*! Check if dosbox emulator is available on the host */
 int dbox_available(void) ;
 #define has_dosbox dbox_available  
 
-int dbox_extract(char ** memory_dump,  
-                        char * formated_cmd_payload[static 0xff]); 
+int dbox_extract(char ** stream_memory_dump,  
+                        char * _Nonnull fmt_cmd_payload[static 0x3e8]); 
 
-int dbox_automount(const char * __restrict__ part_drive, 
-                   struct dosbox_entry_t * __restrict__ payload); 
+int dbox_automount(const char * __restrict__ _Nullable part_drive, 
+                   struct dosbox_entry_t * __restrict__  _Nonnull  payload); 
 
 int dbox_autorun(const char * __restrict__ internal_start_prog, 
                  sandbox_ctx sandbox_context , void ** cmdmem_dump  ) ;
 
-char ** dbox_games(const char * __restrict__  dosbox_game_path)  ;
+char ** dbox_games(const char * __restrict__  _Nullable dosbox_game_path)  ;
+void  dbox_deallocate_games_list(char ** _Nonnull list_of_available_games) ; 
 
-static int preference(const struct dirent * dirent);  
 
 #endif /* DBUTILS */

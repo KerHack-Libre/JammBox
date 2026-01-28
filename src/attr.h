@@ -1,10 +1,6 @@
 //SPDX-License-Identifier: GPL-3.0 
 
-/* attr.h 
- *
- * attributs ou directives provenant de la glibc pour 
- * le compilateur sur certains operation.  
- * 
+/* Common attributes for compiler directive. 
  * Copyright(c) 2025 , Umar Ba <jUmarB@protonmail.com> 
  */ 
 

@@ -168,7 +168,8 @@ static int ui_menu_interaction(int highlight_item_pos , int total_items)
         * j & k : same thing for thoses who use vim keys 
         **/
        switch((kb & 0xff)) 
-       { 
+       {  
+         /*  Move UP */
           case  'j':
           case  'w':
             if(highlight_item_pos  <= 0 )  
@@ -177,12 +178,13 @@ static int ui_menu_interaction(int highlight_item_pos , int total_items)
               highlight_item_pos+=~0;
             break; 
 
+         /* Move Down */
           case  'k':
           case  's': 
             highlight_item_pos-=~0; 
             break ;
 
-            /* Space or Enter to approuve  items  */
+         /* Space or Enter to select item  */
           case 0x20:
           case 0x0a:
             selected_code  = 0xff; 

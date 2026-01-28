@@ -102,8 +102,7 @@ char * archive_scan(zip_t * za , unsigned  int status_mode)
      if(rc) 
        continue ;  //!NOTE : silent ! 
  
-     //!FIXME : I supposed that, the archive should have only   1 entry ...  
-     //!TODO  : Do not populate  archive file when the contains are already available
+     //!FIXME : I supposed that, the archive should have only 1 entry ...  
      uncompressed_data = strdup((char *) archive_populate(za, &zstbuff,  status_mode)) ;
      
      if(!uncompressed_data ||  (void *)~0  == uncompressed_data) 
@@ -160,7 +159,7 @@ static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat ,
   
   char *content_buffer = (char*) malloc(zip_entry_file_stat->size);
   if (!content_buffer) 
-    goto __free_content_buffer ;
+    goto __free_target_file ;
 
   int64_t ziprb   = zip_fread(target_file , content_buffer , zip_entry_file_stat->size) ;  
   if(0 >= ziprb) 
