@@ -1,13 +1,14 @@
 //SPDX-License-Identifier: GPL-3.0 
 
-/*  mbr.h 
- *  Representation structurelle  du Master Boot Record. 
- *  En vue d'en extraire les informations utile provenant 
- *  de l'image du jeu jouable sur dosbox. 
+/*
+ * mbr.h 
+ * 
+ * Structural representation of the Master Boot Record. 
+ * In order to extract useful information from 
+ * the image of the game playable on DOSBox.
  *
- *  Copyright(c) 2025, Umar Ba <jUmarB@protonmail.com>   
+ * Copyright(c) 2025, Umar Ba <jUmarB@protonmail.com>   
  * */
-
 
 #if !defined(DOSMBR_H) 
 #define DOSMBR_H 
@@ -38,12 +39,20 @@ struct __partition_table_entry{
 typedef struct __partition_table_entry   __pte ; 
 typedef struct __partition_table_entry   __ptes[MBR_PE];  
 
+/* Master boot reco rd  (boot sector) 
+ * + boot code  (not used yet ...)
+ * + partition table (used)
+ * + boot_signature  (used)
+ * */
 struct __mbr_t { 
   uint8_t  _boot_code[446] ; 
   __ptes ptabs;  
   uint16_t _boot_sig; 
 }__packed;
 
+/* Hold the Cylinder, Head , Sector 
+ * Should be found in active partition 
+ * */
 struct __chs_t 
 {
    uint16_t  _cylinder; 
@@ -51,11 +60,12 @@ struct __chs_t
    uint8_t   _sector;
 }__packed;   
 
+/* Hold the start and end  CHS data structure  
+ * to calculate  the CHS needed to boot globaly the game
+ * */
 struct __global_chs_t { 
   struct __chs_t  _start  ;
   struct __chs_t  _end ; 
 }; 
-
-
 
 #endif /* DOSMBR_H */

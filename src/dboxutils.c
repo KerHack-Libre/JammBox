@@ -119,7 +119,7 @@ char **dbox_games(const char * restrict game_path)
     free(root_path) , 
       root_path = strndup(game_path , len)  ; 
   
-  direntries= scandir(game_path , &list , preference , alphasort); 
+  direntries= scandir(game_path , &list , dbox_game_location_filter , alphasort); 
   if(!direntries)  
     return (void * )0 ; /*  No entry found ! */ 
 
@@ -136,8 +136,9 @@ char **dbox_games(const char * restrict game_path)
   return founded_games ;  
 }
 //!Act like a custom filter
-static int preference(const struct  dirent * dirent) 
+static int dbox_game_location_filter(const struct  dirent * dirent) 
 {
+  //TODO: add multi filter 
   char * extension  = strstr(dirent->d_name , ".zip") ;  
   return  ((!!(dirent->d_type ^ DT_DIR)) && extension)  ; 
 }
