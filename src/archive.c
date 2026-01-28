@@ -159,7 +159,7 @@ static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat ,
   
   char *content_buffer = (char*) malloc(zip_entry_file_stat->size);
   if (!content_buffer) 
-    goto __free_content_buffer ;
+    goto __free_target_file ;
 
   int64_t ziprb   = zip_fread(target_file , content_buffer , zip_entry_file_stat->size) ;  
   if(0 >= ziprb) 

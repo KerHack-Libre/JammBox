@@ -46,6 +46,8 @@ typedef  typeof(int (char ** )) *sandbox_ctx;
 extern char * dbox_emulator; 
 extern FILE * memrecord_ptr ; 
 
+static int dbox_game_location_filter(const struct dirent * _Nonnull dirent);
+
 /*! Check if dosbox emulator is available on the host */
 int dbox_available(void) ;
 #define has_dosbox dbox_available  
@@ -60,6 +62,7 @@ int dbox_autorun(const char * __restrict__ internal_start_prog,
                  sandbox_ctx sandbox_context , void ** cmdmem_dump  ) ;
 
 char ** dbox_games(const char * __restrict__  _Nullable dosbox_game_path)  ;
-static int dbox_game_location_filter(const struct dirent * _Nonnull dirent);  
+void  dbox_deallocate_games_list(char ** _Nonnull list_of_available_games) ; 
+
 
 #endif /* DBUTILS */

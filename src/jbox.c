@@ -29,26 +29,32 @@ extern char **environ ;
 #define  DOSBOX_CHSBYTES_ORDER(chsbytes) \
   chsbytes->_sector,chsbytes->_head,chsbytes->_cylinder 
 
+#define  IS_SANDBOX(sandbox) !(0xffff  &~ (0xfffff ^(sandbox))) 
 FILE *memrecord=(FILE *)00 ; 
 extern FILE * memrecord_ptr ; 
 extern char * dbox_emulator ; 
 
 static char * jbox_path_resolve(char  const *_Nonnull dosimg);  
-static int scan_pte(mbr_t *) ;   
-static int jbox_launch_dosbox_emulator(const char    * __restrict__, 
-                                       char const    * __restrict__, 
-                                       global_chs_t  * __restrict__ ) ; 
+static unsigned int  scan_pte(mbr_t *  _Nonnull) ;    
+static int jbox_launch_dosbox_emulator(const char    * __restrict__  _Nonnull, 
+                                       char const    * __restrict__  _Nonnull, 
+                                       global_chs_t  * __restrict__  _Nonnull) ; 
 
 int jbox_create_sandbox(char **_Nonnull stream_memory_dump); 
 
-static int sanbox_write_log_to(char  *_Nullable journal , int ios_direction) ; 
+static int sanbox_write_log_to(const char  * restrict _Nullable , int ios_redirect) ; 
 
 int main(int ac , char *const *av) 
 {
-  unsigned int pstatus= EXIT_SUCCESS ; 
-  const char *dosimg= (char*)00 ; 
-  char **available_games = (char **) 00; 
-  unsigned int selected_game =  0 ; 
+  unsigned int pstatus= EXIT_SUCCESS, 
+               selected_game = 0, 
+               apartno =0 , 
+               archive_status_mode = 0; 
+    
+  global_chs_t * chsbytes = (global_chs_t *)00 ;  
+  struct __unzip_t * data =  (struct __unzip_t*)00;  
+  char *dosimg= (char*)00,
+       **available_games = (char **) 00; 
 
   if(!(ac &~(1))) 
   { 
@@ -61,32 +67,31 @@ int main(int ac , char *const *av)
     if(~0 == selected_game) 
        disk_err(-EINVAL) ; 
 
+    free(dosimg), dosimg=(char *)00; 
     dosimg = strdup(*(available_games+selected_game)) ;  
-
+    
+    dbox_deallocate_games_list(available_games); 
+    available_games= 00; 
 #else  
     pstatus^= jbox_goto(1, -EINVAL,"Require DOS/MBR image or zip archive file\012")  ; 
 #endif 
   }else  
     dosimg =  strdup(*(av+(ac -1)))  ; 
    
-  printf("-> Game  : %s  \012",  dosimg) ; 
 
 #if defined(USE_ZIP_ARCHIVE) 
-  unsigned int status_mode =  archive_open(dosimg) ; 
-  if(~0 != status_mode)  
+  archive_status_mode =  archive_open(dosimg) ; 
+  if(~0 != archive_status_mode)  
   { 
-    status_mode&= 0xffff ; 
-    struct __unzip_t * data =(struct __unzip_t *) archive_scan(za ,  status_mode);
+    archive_status_mode&= 0xffff ; 
+    struct __unzip_t * data =(struct __unzip_t *) archive_scan(za ,  archive_status_mode);
     if(!data) 
     {
        free(dosimg)  , dosimg =00 ; 
        pstatus^=jbox_goto(1 , -ENODATA, "Fail to uncompress archive entry") ; 
     }  
-    puts("\011 ... OK") ; 
-    printf("disks found at  %s \012" , data->_filename) ;  
-    //free(dosimg);  dosimg =00 ;  
-  
     dosimg = strdup( ((unzip_t *)data)->_filename);  
+    free(data) , data =0;  
   }
   
 #endif 
@@ -98,7 +103,7 @@ int main(int ac , char *const *av)
      goto _eplg; 
   }
 
-   int apartno = scan_pte(&mbr) ;  
+   apartno = scan_pte(&mbr) ;  
    if(~0 == apartno) 
    {
      pstatus^=err_expr(dc_err("No Active partition found")); 
@@ -106,27 +111,29 @@ int main(int ac , char *const *av)
    }
    __pte *active_boot_partition = (mbr.ptabs+apartno); 
   
-   global_chs_t * chsbytes = decode_chsbytes(active_boot_partition) ; 
+   chsbytes = decode_chsbytes(active_boot_partition) ; 
    if(!chsbytes) 
-   {
-     err((pstatus^=1) , "Disk Check fail to decode CHS start and end"); 
-     goto _eplg ;  
+   { 
+     pstatus^=jbox_goto(1,  -ENODATA ,"Disk check fail to decode CHS start and end"); 
    } 
 
-   //!TODO: Trouver un moyen de  verifier si un script de demarrage  est dispo 
+   //!TODO: Need to check startup script first  
    jbox_launch_dosbox_emulator("START.BAT", dosimg ,  chsbytes) ;
-  
+   
+   free(chsbytes), chsbytes=0; 
+   free(dosimg),  dosimg=0 ; 
+   wait(0) ; 
+   tx(clear_screen); 
 _eplg: 
   return pstatus ; 
 }
 
-
 static char * jbox_path_resolve(char  const * dosimg)  
 {
-  char *path =(char *)0 ;
-  char *index_start = (char *)dosimg;  
+  char *path =(char *)00 ,
+       *index_start = (char *)dosimg,
+       *cwd  =  get_current_dir_name(); 
 
-  char * cwd  =  get_current_dir_name(); 
   int c_start =0 ; memcpy(&c_start , dosimg , 2) , 
       c_start&=0xffff ; 
 
@@ -140,7 +147,7 @@ static char * jbox_path_resolve(char  const * dosimg)
 }
 
 
-static int scan_pte(mbr_t  * mbr)  
+static unsigned int  scan_pte(mbr_t  * mbr)  
 {
   unsigned int  idx =~0 ,
                 missed=~0 ; 
@@ -161,14 +168,17 @@ static int scan_pte(mbr_t  * mbr)
   return  idx; 
 }
 
-static int jbox_launch_dosbox_emulator(const char * __restrict__ start_script, 
+static int jbox_launch_dosbox_emulator(const char * restrict start_script, 
                                        char const * restrict dosimg, 
                                        global_chs_t * restrict active_partition) 
 {
   if(!has_dosbox()) 
     return ~0 ; 
   
-  char *abs_path= jbox_path_resolve(dosimg) ;  
+  size_t size =0 ; 
+  char *abs_path= jbox_path_resolve(dosimg), 
+       *dump = (char *)00 ; 
+
   struct dosbox_entry_t payload= { 
      IMGMOUNT,
      abs_path,
@@ -178,8 +188,6 @@ static int jbox_launch_dosbox_emulator(const char * __restrict__ start_script,
 #endif 
   }; 
 
-  size_t size = 0 ; 
-  char *dump= 0 ; 
   memrecord  = open_memstream(&dump ,  &size) ; 
   if (!memrecord)  
   {
@@ -189,8 +197,8 @@ static int jbox_launch_dosbox_emulator(const char * __restrict__ start_script,
   memrecord_ptr  =  memrecord ; 
 
   dbox_automount(DBOX_DRIVE(c), &payload); 
-  dbox_autorun(start_script  , jbox_create_sandbox , (void ** )&dump) ; 
-  
+  dbox_autorun(start_script  , jbox_create_sandbox , (void ** )&dump) ;
+  free(abs_path) , abs_path=0; 
   return 0 ; 
 
 }
@@ -201,48 +209,43 @@ int jbox_create_sandbox(char ** memdump)
   pid_t sandbox = ~0 ; 
   
   sandbox^=fork() ; 
-  if(!sandbox) 
-  {
+  if(!sandbox) {
    status^=EXIT_FAILURE ;
    perror("fork") ; 
    goto  _eplg ; 
   }
-  
-  if(!(0xffff  &~ (0xfffff ^ (~sandbox))) )  
-  { 
+  if(IS_SANDBOX(~sandbox)){ 
+
+    errno=0 ; 
     int logfd = sanbox_write_log_to((void *)00/* /dev/null*/
                                     ,STDERR_FILENO|STDOUT_FILENO); 
 
-    char *payload[1000] = {
+    char *payload[0x3e8] = {
       EMULNAME(dosbox) ,(char[]){0x2d,0x63,00},
     } ; 
     dbox_extract(memdump , payload);
-    int s = execv(dbox_emulator , payload) ; 
-    if(!(~0 ^ s)) 
+    if (!(~0 ^ execv(dbox_emulator , payload))) 
        perror("execv") ; 
-
+    
     close(logfd) ; 
-    exit(s);   
-  }else 
-  {  
-    wait(&status); 
-  }
+    exit(errno);   
+  } 
 
 _eplg: 
   return  status ; 
 }
 
-static int sanbox_write_log_to(char  *_Nullable journal, int ios_direction) 
+static int sanbox_write_log_to(const char  * restrict  journal, int ios_direction) 
 {
   unsigned int jfd =~0; 
   char logfile[0xff] = "/dev/null"; 
-  mode_t usermod = 0 ;
-  mode_t io = O_RDWR ;
+  mode_t usermod = 0,
+         io = O_RDONLY ;
   if (journal) 
   {
     memset(logfile ,  0 , 0xff); 
     sprintf(logfile, "%s" , journal) ; 
-    io|=O_CREAT ;
+    io|=O_CREAT|O_WRONLY;
     usermod=S_IRUSR|S_IWUSR;  
   }
 
@@ -252,7 +255,11 @@ static int sanbox_write_log_to(char  *_Nullable journal, int ios_direction)
     perror("open") ; 
     return 0; 
   }
-  
+ 
+  /* 
+   * Redirect the early print of dosbox depending 
+   * on what u specified as logfile a.k.a journal
+   */
   if(ios_direction &  STDOUT_FILENO) 
     dup2(~jfd, STDOUT_FILENO) ; 
 
