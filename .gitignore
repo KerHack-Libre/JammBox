@@ -3,3 +3,4 @@ games/*.img
 note.txt 
 games/princeofpersia/prince.img 
 src/a.out 
+games/princeofpersia/*.img
