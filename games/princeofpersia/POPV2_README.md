@@ -1,13 +1,13 @@
-<img src="images/popv2_cover.jpg" width="132"  height="" alt="POP" style="margin-right:20px"  align="left"/>
+<img src="images/popv2_cover.jpg" width="132"  height="" alt="POPv2" title="POP-TSTF cover" style="margin-right:20px"  align="left"/>
 <div>
 </div>
 
 
-# 🏰 Prince of Persia: The Shadow and the Flame
+**🏰 Prince of Persia: The Shadow and the Flame** 
 
 Suite directe du jeu culte *Prince of Persia*, **The Shadow and the Flame** propose une aventure plus sombre, plus profonde et plus exigeante, mêlant plateformes, combats à l’épée et narration.
+</br></br></br></br>
 
----
 
 ## 📖 Résumé de l’histoire
 
@@ -23,10 +23,9 @@ Le jeu explore les thèmes de l’identité, du destin et de la dualité, tout e
 
 ## 🎮 Contrôles
 
-<img src="images/popv2-gameplay.gif" width="200"  height="200" alt="POP" style="margin-right:20px"  align="right"/>
+<img src="images/popv2-gameplay.gif" width="280"  height="280" alt="POPv2" title="POPv2 Gameplay" style="margin-right:20px"  align="right"/>
 <div>
 </div>
-
 
 
 ### ⌨️ Commandes clavier
@@ -53,7 +52,6 @@ Le jeu explore les thèmes de l’identité, du destin et de la dualité, tout e
 | Alt + H | Hall of Fame |
 | Alt + Q | Quitter le jeu (retour DOS) |
 
----
 
 ## 🕹️ Conseils de jeu
 
@@ -61,20 +59,14 @@ Le jeu explore les thèmes de l’identité, du destin et de la dualité, tout e
 - Les combats à l’épée nécessitent patience et placement.
 - Le Shadow Man introduit des mécaniques uniques plus tard dans le jeu.
 
----
-
 ## 📌 Notes
 
 - Jeu initialement conçu pour DOS
 - Clavier fortement sollicité
 - Difficulté progressive mais exigeante
 
----
-
 ## ❤️ Héritage
 
 *Prince of Persia: The Shadow and the Flame* est souvent considéré comme l’un des meilleurs épisodes de la saga classique, tant pour son gameplay que pour sa narration plus mature.
-
----
 
 
