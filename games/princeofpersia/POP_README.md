@@ -1,4 +1,4 @@
-<img src="images/pop_cover.jpg" width="132"  height="" alt="POP" title="POP cover" style="margin-right:20px"  align="left"/>
+<img src="../../assets/images/pop/pop_cover.jpg" width="132"  height="" alt="POP" title="POP cover" style="margin-right:20px"  align="left"/>
 <div></div>
 
 **PRINCE OF PERSIA (1990)**                     
@@ -23,7 +23,7 @@ Le jeu se distingue par ses animations réalistes en rotoscopie, son gameplay ex
 Traversez le palais, évitez les pièges et les gardes,
 et sauvez la princesse. Vous disposez de 60 minutes.
 ### COMMANDES
-<img src="images/popv1-gameplay.gif" width="300"  height="300" alt="POP-Gameplay" title="POP gameplay" style="margin-right:20px"  align="right"/>
+<img src="../../assets/images/pop/popv1-gameplay.gif" width="300"  height="300" alt="POP-Gameplay" title="POP gameplay" style="margin-right:20px"  align="right"/>
 <div>
 </div>
 

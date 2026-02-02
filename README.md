@@ -1,5 +1,5 @@
-<img src="assets/imgs/logos/freedos.jpg" width=""  height="" alt="freedos" style="margin-right:20px;border-radius:35px"  align="right"/>
-<img src="assets/imgs/logos/dosbox-logo.png" width="132"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="left"/>
+<img src="assets/logos/freedos.jpg" width=""  height="" alt="freedos" style="margin-right:20px;border-radius:35px"  align="right"/>
+<img src="assets/logos/dosbox-logo.png" width="132"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="left"/>
 <div>
 <div>
 </div>
