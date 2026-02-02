@@ -1,4 +1,4 @@
-<img src="images/popv2_cover.jpg" width="132"  height="" alt="POPv2" title="POP-TSTF cover" style="margin-right:20px"  align="left"/>
+<img src="../../assets/images/pop/popv2_cover.jpg" width="132"  height="" alt="POPv2" title="POP-TSTF cover" style="margin-right:20px"  align="left"/>
 <div>
 </div>
 
@@ -23,7 +23,7 @@ Le jeu explore les thèmes de l’identité, du destin et de la dualité, tout e
 
 ## 🎮 Contrôles
 
-<img src="images/popv2-gameplay.gif" width="280"  height="280" alt="POPv2" title="POPv2 Gameplay" style="margin-right:20px"  align="right"/>
+<img src="../../assets/pop/images/popv2-gameplay.gif" width="280"  height="280" alt="POPv2" title="POPv2 Gameplay" style="margin-right:20px"  align="right"/>
 <div>
 </div>
 
