@@ -3,9 +3,10 @@
 <div></div>
 
 **🟡 Ms. Pac-Man Maze Madness (1996)**
-*Ms. Pac-Man Maze Madness* est un jeu d’arcade en 3D sorti en 1996, marquant une évolution majeure de la franchise *Pac-Man*. Le jeu propose des labyrinthes tridimensionnels, combinant action, exploration et résolution d’énigmes.
 
----
+*Ms. Pac-Man Maze Madness* est un jeu d’arcade en 3D sorti en 1996, marquant une évolution majeure de la franchise *Pac-Man*. Le jeu propose des labyrinthes tridimensionnels, combinant action, exploration et résolution d’énigmes.
+</br> </br>
+</br>
 
 ## 📖 Résumé
 
