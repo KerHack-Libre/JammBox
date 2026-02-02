@@ -1,4 +1,4 @@
-<img src="images/popv2_cover.jpg" width="132"  height="" alt="POP" style="margin-right:20px"  align="right"/>
+<img src="images/popv2_cover.jpg" width="132"  height="" alt="POP" style="margin-right:20px"  align="left"/>
 <div>
 </div>
 
@@ -23,7 +23,7 @@ Le jeu explore les thèmes de l’identité, du destin et de la dualité, tout e
 
 ## 🎮 Contrôles
 
-<img src="images/popv2_gameplay.gif" width="132"  height="" alt="POP" style="margin-right:20px"  align="center"/>
+<img src="images/popv2-gameplay.gif" width="200"  height="200" alt="POP" style="margin-right:20px"  align="right"/>
 <div>
 </div>
 
