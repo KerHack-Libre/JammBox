@@ -15,7 +15,7 @@ Le jeu introduit de nouvelles mécaniques, comme des **puzzles environnementaux*
 
 ## 🎮 Contrôles
 
-<img src="../../assets/images/pacman/mspacman-gameplay.gif" width="300"  height="300" alt="MSPAC" title="Ms pac-man gameplay" style="margin-right:20px"  align="left"/>
+<img src="../../assets/images/pacman/mspacman-gameplay.gif" width="280"  height="280" alt="MSPAC" title="Ms pac-man gameplay" style="margin-right:20px"  align="right"/>
 <div></div>
 
 
