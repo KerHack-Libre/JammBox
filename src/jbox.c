@@ -40,10 +40,11 @@ static unsigned int  scan_pte(mbr_t *  _Nonnull) ;
 static int jbox_launch_dosbox_emulator(const char    * __restrict__  _Nonnull, 
                                        char const    * __restrict__  _Nonnull, 
                                        global_chs_t  * __restrict__  _Nonnull) ; 
+static int jbox_rm_disk_image(const char * __restrict__   _Nonnull) ; 
+static int sanbox_write_log_to(const char  * restrict _Nullable , int ios_redirect) ; 
 
 int jbox_create_sandbox(char **_Nonnull stream_memory_dump); 
 
-static int sanbox_write_log_to(const char  * restrict _Nullable , int ios_redirect) ; 
 
 int main(int ac , char *const *av) 
 {
@@ -118,11 +119,19 @@ int main(int ac , char *const *av)
    } 
 
    //!TODO: Need to check startup script first  
-   jbox_launch_dosbox_emulator("START.BAT", dosimg ,  chsbytes) ;
+   jbox_launch_dosbox_emulator(INIT_ENTRY_LAUNCH_SCRIPT, dosimg ,  chsbytes) ;
    
    free(chsbytes), chsbytes=0; 
+#if !ALWAYS_REMOVE_IMG_AFTER_PLAY  
+   //!just freeing is enought ...  
    free(dosimg),  dosimg=0 ; 
+#endif 
    wait(0) ; 
+#if  ALWAYS_REMOVE_IMG_AFTER_PLAY  
+   jbox_rm_disk_image(dosimg) ; 
+   free(dosimg)  , dosimg=0 ;  
+#endif 
+   
    tx(clear_screen); 
 _eplg: 
   return pstatus ; 
@@ -269,3 +278,10 @@ static int sanbox_write_log_to(const char  * restrict  journal, int ios_directio
   return ~jfd ; 
 } 
 
+static int jbox_rm_disk_image(const char * restrict  dosbox_disk_image) 
+{
+   if(~0 < euidaccess(dosbox_disk_image , F_OK))  
+     return remove(dosbox_disk_image) ; 
+
+   return ~0 ;  
+}
