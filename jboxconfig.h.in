@@ -1,0 +1,34 @@
+//SPDX-License-Identifier:GPL-3.0
+/* Input configuration for Jammbox
+ * 
+ * Copyright(c) 2025, Umar Ba <jUmarB@protonmail.com> 
+ * */
+
+
+
+#define ORGNAME                 " KerHack-Libre"
+#define APP_NAME                " Jammbox Playground "
+#define APP_VERSION             " @version@ "
+#define VERBOSE_VERSION_STR         \
+  APP_NAME "version " APP_VERSION   \
+  "By"  ORGNAME 
+
+
+#define GAMES_PATH_LOCATION "./games"  
+
+//! W'll always remove the extracted disk images games 
+//+ to avoid poluate the file system 
+#define ALWAYS_REMOVE_IMG_AFTER_PLAY 1 
+
+/* WARNING: DO NOT MODIFY! unless you know what you doing */
+//! This is required to start the games.
+//+ It's the init script that perform some operations for 
+//+ DOSBOX emulator  
+#define INIT_ENTRY_LAUNCH_SCRIPT "START.BAT"
+
+/* Allowed File System  Check */ 
+#define ALLOWED_FILE_ALLOCATION_TABLE_TYPE  (0x10|0x20<<8) 
+#define AFAT_TYPE ALLOWED_FILE_ALLOCATION_TABLE_TYPE 
+
+/* Prioritizing  File Allocation Table 16 (FAT16)*/ 
+#define DEFAT ((ALLOWED_FS_TYPE & 0xff00)>> 8) 

@@ -10,6 +10,7 @@
 #include <assert.h> 
 #include <sys/wait.h> 
 #include <sys/types.h> 
+#include "jboxconfig.h"
 
 #include "diskcheck.h" 
 #include "dboxutils.h"
@@ -49,8 +50,7 @@ int main(int ac , char *const *av)
   unsigned int pstatus= EXIT_SUCCESS, 
                selected_game = 0, 
                apartno =0 , 
-               archive_status_mode = 0; 
-    
+               archive_status_mode = 0;  
   global_chs_t * chsbytes = (global_chs_t *)00 ;  
   struct __unzip_t * data =  (struct __unzip_t*)00;  
   char *dosimg= (char*)00,
