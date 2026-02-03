@@ -18,6 +18,7 @@
 #include <termios.h> 
 #include <string.h> 
 
+#include "jboxconfig.h"
 #include "attr.h" 
 
 #define tx(xcap)\
@@ -39,9 +40,8 @@
 #define BACKUP 2 
 
 
-//!TODO : Move this  to meson config 
-#define  BANNER_TOP_STRING "Jammbox version 1.0 By KerHack-Libre" 
-#define  BANNER_BOTTOM_STRING "Jammbox PlayGround" 
+#define  BANNER_TOP_STRING     APP_NAME
+#define  BANNER_BOTTOM_STRING  VERBOSE_VERSION_STR
 
 /* Used to restor  the default behavior of the terminal */
 extern  struct  termios *__backup_tcios;
