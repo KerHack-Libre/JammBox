@@ -138,6 +138,9 @@ int ui_display_menulist(const char ** item_list , int highlight_item_pos)
 static int ui_menu_interaction(int highlight_item_pos , int total_items)
 {
   int selected_code = 0  , ready = 0 ;  
+  unsigned kb = 0 , kb_mask= 0xff0000;
+  size_t rb  = 0; 
+  unsigned char byte_keycode  =0 ; 
   
   struct pollfd kb_evt = {
     .fd = STDIN_FILENO, 
@@ -159,28 +162,43 @@ static int ui_menu_interaction(int highlight_item_pos , int total_items)
      } 
 
      if(kb_evt.revents &  POLLIN) 
-     {
-       char  kb  =getc(stdin) ; 
-
+     { 
        /** 
-        * move the cursor select 
-        * w & s : for up and down 
-        * j & k : same thing for thoses who use vim keys 
-        **/
-       switch((kb & 0xff)) 
+        * Move the cursor select 
+        * NOTE : combine  WASD and vim Key navigation HJKL
+        *
+        * j w d l <^  : for up
+        * a s k h >   : same thing for thoses who use vim keys 
+        *         
+        * <^>     : or use arrow keys  
+        *  V
+        **/ 
+       rb = read(STDIN_FILENO , &kb, sizeof(unsigned)); 
+       byte_keycode =  1 < rb ?  ((kb & kb_mask) >> 0x10) : (kb & (kb_mask>>0x10)) ;  
+       
+         
+       switch( byte_keycode & 0xff)   
        {  
-         /*  Move UP */
+         /*  Move UP */ 
+          case UP_ARROW_KEY:  
+          case RIGHT_ARROW_KEY: 
           case  'j':
           case  'w':
+          case  'd':
+          case  'l': 
             if(highlight_item_pos  <= 0 )  
               highlight_item_pos= total_items-1; 
             else
               highlight_item_pos+=~0;
             break; 
 
-         /* Move Down */
+         /* Move Down */ 
+          case DOWN_ARROW_KEY: 
+          case LEFT_ARROW_KEY:
           case  'k':
-          case  's': 
+          case  's':
+          case  'a': 
+          case  'h': 
             highlight_item_pos-=~0; 
             break ;
 
@@ -189,7 +207,9 @@ static int ui_menu_interaction(int highlight_item_pos , int total_items)
           case 0x0a:
             selected_code  = 0xff; 
             break;   
-       }
+       } 
+       
+          
      } 
 
   }

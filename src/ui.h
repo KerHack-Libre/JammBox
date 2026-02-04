@@ -30,6 +30,16 @@
 #define tg(...)\
   tx(tgoto(__VA_ARGS__))   
 
+enum __arrow_key_navigation_t{ 
+  UP_ARROW_KEY = 0x41 ,
+#define UP_ARROW_KEY UP_ARROW_KEY 
+  DOWN_ARROW_KEY, 
+#define DOWN_ARROW_KEY  DOWN_ARROW_KEY 
+  LEFT_ARROW_KEY, 
+#define LEFT_ARROW_KEY LEFT_ARROW_KEY 
+  RIGHT_ARROW_KEY  
+#define RIGHT_ARROW_KEY RIGHT_ARROW_KEY 
+}; 
 
 #define  BANNER_TOP     (1 << 0)  
 #define  BANNER_BOTTOM  (1 << 1) 
