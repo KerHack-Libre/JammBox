@@ -14,7 +14,7 @@
   "By"  ORGNAME 
 
 
-#define GAMES_PATH_LOCATION "./games"  
+#define GAMES_PATH_LOCATION "games"  
 
 //! W'll always remove the extracted disk images games 
 //+ to avoid poluate the file system 

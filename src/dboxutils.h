@@ -32,6 +32,12 @@ enum DOSBOX_DIRECTIVES {
 #define CMDIR(__directive) \
   #__directive
 
+#define lambda(x$_ret , x$_args, x$_body)({\
+    x$_ret x$_anon_$ x$_args\
+    x$_body\
+    &x$_anon_$;\
+    })
+
 struct dosbox_entry_t  
 { 
   enum DOSBOX_DIRECTIVES doscmd_directive ; 
@@ -46,6 +52,7 @@ typedef  typeof(int (char ** )) *sandbox_ctx;
 extern char * dbox_emulator; 
 extern FILE * memrecord_ptr ; 
 
+typedef typeof(int (const struct dirent* _Nonnull )) * new_filter_t;  
 static int dbox_game_location_filter(const struct dirent * _Nonnull dirent);
 
 /*! Check if dosbox emulator is available on the host */
