@@ -106,6 +106,7 @@ char **dbox_games(const char * restrict game_path)
   ssize_t  len =  ~0 ; 
   char *s =(void *) 0  , 
        *root_path = strdup(game_path) ;   
+  
 
   char **founded_games = malloc(sizeof(char)  * 100 * 100 ) ;  
   if(!founded_games) 
@@ -121,30 +122,53 @@ char **dbox_games(const char * restrict game_path)
     root_path = strndup(game_path , len)  ; 
   }
   
-  new_filter_t only_dir = lambda(int,(const struct dirent * dir), {
-      return  (*dir->d_name & 0xff) ^ 0x2e;}) ; 
+  new_filter_t catch_only_dir = lambda(int,(const struct dirent * dir), {
+      return  ((*dir->d_name & 0xff) ^ 0x2e && (dir->d_type  & DT_DIR)); }) ; 
 
-  direntries= scandir(game_path , &list, only_dir, alphasort) ;
+  direntries= scandir(game_path , &list, catch_only_dir, alphasort) ;
 
   if(!direntries)  
-    return (void * )0 ; /*  No entry found ! */ 
+    goto _skip_data ; /*  No entry found ! */ 
 
   while(direntries--) 
   { 
-    //TODO : scan subdir with depth : scandepth(list , 1 /* the depth*/) ; 
-
-    asprintf((founded_games+idx) , "%s/%s",root_path  , list[direntries]->d_name) ; 
-    printf("-> %s \n" , *(founded_games +idx ));  
-    idx=-~idx ; 
+    idx =   __scandepth(root_path  , list[direntries]->d_name , founded_games ,  dbox_game_location_filter) ; 
+    if(!idx)
+      continue ; 
+    
   }  
-  abort() ;  
-  *(founded_games - (~idx)) =  (void *)0 ; 
+_skip_data: 
+  *(founded_games + idx) =  (void *)0 ; 
 
   free(list) , list =0 ; 
   free(root_path)  , root_path = 0 ; 
   return founded_games ;  
 }
 
+static  int  __scandepth(const char * rpath ,  const char * dirent, char ** collections , new_filter_t custom_filter) 
+{
+  struct dirent **list = 00 ; 
+  char *abs_path= 0 ; 
+  static int idx=0 ; 
+  int filentries = 0 ; 
+
+  asprintf(&abs_path, "%s/%s",  rpath , dirent) ; 
+  filentries =  scandir(abs_path  ,&list, custom_filter , alphasort); 
+
+  if (!filentries) 
+    goto _clean; 
+  
+  while(filentries--) 
+  { 
+    asprintf((collections+idx) , "%s/%s",abs_path ,list[filentries]->d_name) ;  
+    idx=-~idx; 
+  } 
+
+_clean: 
+  free(list) , list=0 ; 
+  free(abs_path)  ; 
+  return   idx ;  
+}
 static int dbox_game_location_filter(const struct  dirent * dirent) 
 {
   //TODO: add multi filter   

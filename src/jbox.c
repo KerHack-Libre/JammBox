@@ -53,7 +53,7 @@ int main(int ac , char *const *av)
                archive_status_mode = 0;  
   global_chs_t * chsbytes = (global_chs_t *)00 ;  
   struct __unzip_t * data =  (struct __unzip_t*)00;  
-  char *dosimg= (char*)00,
+  char *dosimg= (char*)00, 
        **available_games = (char **) 00; 
 
   if(!(ac &~(1))) 
@@ -61,9 +61,10 @@ int main(int ac , char *const *av)
     
 #if defined(JBOX_TUI_MENU) && JBOX_TUI_MENU ==1
     available_games =  dbox_games(GAMES_PATH_LOCATION); 
-    if(!available_games) 
+    if(!*available_games) 
+    {
       pstatus^= jbox_goto(1, -ENODATA ,  "No Games found \012"); 
-
+    }
 
     ui_init() ; 
     selected_game =  ui_display_menulist((const char ** )available_games ,0) ;
