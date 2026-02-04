@@ -24,7 +24,6 @@ extern zip_t *za;
 #define jbox_goto(endprog_status , errcode , ...)\
       endprog_status;do{disk_err(errcode);err(errcode,__VA_ARGS__); goto _eplg;}while(0)  
 
-#define GAMES_PATH_LOCATION  "games/princeofpersia"
 extern char **environ ; 
 
 #define  DOSBOX_CHSBYTES_ORDER(chsbytes) \
@@ -62,7 +61,10 @@ int main(int ac , char *const *av)
     
 #if defined(JBOX_TUI_MENU) && JBOX_TUI_MENU ==1
     available_games =  dbox_games(GAMES_PATH_LOCATION); 
-    
+    if(!available_games) 
+      pstatus^= jbox_goto(1, -ENODATA ,  "No Games found \012"); 
+
+
     ui_init() ; 
     selected_game =  ui_display_menulist((const char ** )available_games ,0) ;
     if(~0 == selected_game) 

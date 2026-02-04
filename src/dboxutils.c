@@ -115,21 +115,29 @@ char **dbox_games(const char * restrict game_path)
   s = strrchr(root_path , 0x2f) ; 
   len+= strlen(root_path) ;  
    
-  if(!(len ^ (s - root_path)))  
-    free(root_path) , 
-      root_path = strndup(game_path , len)  ; 
+  if(!(len ^ (s - root_path))) 
+  {
+    free(root_path); 
+    root_path = strndup(game_path , len)  ; 
+  }
   
-  direntries= scandir(game_path , &list , dbox_game_location_filter , alphasort); 
+  new_filter_t only_dir = lambda(int,(const struct dirent * dir), {
+      return  (*dir->d_name & 0xff) ^ 0x2e;}) ; 
+
+  direntries= scandir(game_path , &list, only_dir, alphasort) ;
+
   if(!direntries)  
     return (void * )0 ; /*  No entry found ! */ 
 
   while(direntries--) 
-  {  
+  { 
+    //TODO : scan subdir with depth : scandepth(list , 1 /* the depth*/) ; 
+
     asprintf((founded_games+idx) , "%s/%s",root_path  , list[direntries]->d_name) ; 
     printf("-> %s \n" , *(founded_games +idx ));  
     idx=-~idx ; 
   }  
-  
+  abort() ;  
   *(founded_games - (~idx)) =  (void *)0 ; 
 
   free(list) , list =0 ; 
@@ -139,7 +147,7 @@ char **dbox_games(const char * restrict game_path)
 
 static int dbox_game_location_filter(const struct  dirent * dirent) 
 {
-  //TODO: add multi filter 
+  //TODO: add multi filter   
   char * extension  = strstr(dirent->d_name , ".zip") ;  
   return  ((!!(dirent->d_type ^ DT_DIR)) && extension)  ; 
 }
