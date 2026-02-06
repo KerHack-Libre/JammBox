@@ -14,7 +14,7 @@
 
 char * dbox_emulator =(char*)00 ;  
 FILE * memrecord_ptr =(FILE *)00; 
-
+static int reset_idx_ = 0 ; 
 int dbox_available(void) 
 {
    char  *binloc = getenv("PATH") , 
@@ -139,7 +139,7 @@ char **dbox_games(const char * restrict game_path)
   }  
 _skip_data: 
   *(founded_games + idx) =  (void *)0 ; 
-
+  reset_idx_=1;   
   free(list) , list =0 ; 
   free(root_path)  , root_path = 0 ; 
   return founded_games ;  
@@ -151,6 +151,12 @@ static  int  __scandepth(const char * rpath ,  const char * dirent, char ** coll
   char *abs_path= 0 ; 
   static int idx=0 ; 
   int filentries = 0 ; 
+  
+  if(reset_idx_) 
+  {
+    idx=0; 
+    reset_idx_^=1 ;  
+  }
 
   asprintf(&abs_path, "%s/%s",  rpath , dirent) ; 
   filentries =  scandir(abs_path  ,&list, custom_filter , alphasort); 

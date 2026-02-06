@@ -4,3 +4,5 @@ note.txt
 games/princeofpersia/prince.img 
 src/a.out 
 games/princeofpersia/*.img
+games/Pacman/*.img
+games/princeofpersia/*.img

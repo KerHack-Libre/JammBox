@@ -25,6 +25,7 @@ extern zip_t *za;
       endprog_status;do{disk_err(errcode);err(errcode,__VA_ARGS__); goto _eplg;}while(0)  
 
 extern char **environ ; 
+sig_atomic_t sigatom = 0 ; 
 
 #define  DOSBOX_CHSBYTES_ORDER(chsbytes) \
   chsbytes->_sector,chsbytes->_head,chsbytes->_cylinder 
@@ -55,17 +56,17 @@ int main(int ac , char *const *av)
   struct __unzip_t * data =  (struct __unzip_t*)00;  
   char *dosimg= (char*)00, 
        **available_games = (char **) 00; 
-
-  if(!(ac &~(1))) 
-  { 
-    
+  while(1) 
+  {
+    if(!(ac &~(1))) 
+   { 
+     
 #if defined(JBOX_TUI_MENU) && JBOX_TUI_MENU ==1
     available_games =  dbox_games(GAMES_PATH_LOCATION); 
     if(!*available_games) 
     {
       pstatus^= jbox_goto(1, -ENODATA ,  "No Games found \012"); 
     }
-
     ui_init() ; 
     selected_game =  ui_display_menulist((const char ** )available_games ,0) ;
     if(~0 == selected_game) 
@@ -94,7 +95,7 @@ int main(int ac , char *const *av)
        free(dosimg)  , dosimg =00 ; 
        pstatus^=jbox_goto(1 , -ENODATA, "Fail to uncompress archive entry") ; 
     }  
-    dosimg = strdup( ((unzip_t *)data)->_filename);  
+    dosimg = strdup(data->_filename);  
     free(data) , data =0;  
   }
   
@@ -121,7 +122,8 @@ int main(int ac , char *const *av)
      pstatus^=jbox_goto(1,  -ENODATA ,"Disk check fail to decode CHS start and end"); 
    } 
 
-   //!TODO: Need to check startup script first  
+   //!TODO: Need to check startup script first 
+   //!TODO: Mount the partion with the  adequate fs type 
    jbox_launch_dosbox_emulator(INIT_ENTRY_LAUNCH_SCRIPT, dosimg ,  chsbytes) ;
    
    free(chsbytes), chsbytes=0; 
@@ -129,12 +131,15 @@ int main(int ac , char *const *av)
    //!just freeing is enought ...  
    free(dosimg),  dosimg=0 ; 
 #endif 
+   //!TODO : The main programme should run in background  forever 
    wait(0) ; 
+   
 #if  ALWAYS_REMOVE_IMG_AFTER_PLAY  
    jbox_rm_disk_image(dosimg) ; 
    free(dosimg)  , dosimg=0 ;  
 #endif 
-   
+} 
+
    tx(clear_screen); 
 _eplg: 
   return pstatus ; 
