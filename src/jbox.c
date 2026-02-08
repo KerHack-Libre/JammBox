@@ -56,6 +56,12 @@ int main(int ac , char *const *av)
   struct __unzip_t * data =  (struct __unzip_t*)00;  
   char *dosimg= (char*)00, 
        **available_games = (char **) 00; 
+
+  if(!has_dosbox())
+  {
+    pstatus^=jbox_goto(1 ,-ENOPKG , "DosBox not found \012") ; 
+  }
+  //!TODO : Refactor this dirty code ... 
   while(1) 
   {
     if(!(ac &~(1))) 
@@ -96,6 +102,7 @@ int main(int ac , char *const *av)
        pstatus^=jbox_goto(1 , -ENODATA, "Fail to uncompress archive entry") ; 
     }  
     dosimg = strdup(data->_filename);  
+    free(data->_filename), data->_filename =0; 
     free(data) , data =0;  
   }
   
@@ -189,9 +196,7 @@ static int jbox_launch_dosbox_emulator(const char * restrict start_script,
                                        char const * restrict dosimg, 
                                        global_chs_t * restrict active_partition) 
 {
-  if(!has_dosbox()) 
-    return ~0 ; 
-  
+
   size_t size =0 ; 
   char *abs_path= jbox_path_resolve(dosimg), 
        *dump = (char *)00 ; 
