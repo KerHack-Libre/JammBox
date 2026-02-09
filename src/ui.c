@@ -217,3 +217,7 @@ static int ui_menu_interaction(int highlight_item_pos , int total_items)
   return (item_index << 8| selected_code) ; 
 }
 
+int ui_recover(void) 
+{
+   return  __restor_shell_default_mode() ;
+}
