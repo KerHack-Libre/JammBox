@@ -32,6 +32,13 @@ unsigned int  archive_open(const char  *restrict archive_file)
   
   archive_file_root_dir = archive_get_dirent_path_location(archive_file); 
   return check_status ;  
+} 
+
+void archive_close(zip_t *  za) 
+{  
+  if(za) 
+   zip_close(za) , za =(void*)00 ; 
+  
 }
 
 unsigned int archive_check(const char * archive_filename)

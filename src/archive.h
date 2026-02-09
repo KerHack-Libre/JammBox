@@ -70,6 +70,8 @@ static __always_inline _Bool __archive_auto_cancel_propagation(zip_stat_t  * res
 
 /* Archive  basic routines operations  such as :open  check and scaning ... */  
 unsigned int archive_open(const char * __restrict__ _Nonnull); 
+void archive_close(zip_t * _Nonnull) ; 
+
 unsigned int archive_check(const char * __restrict__ _Nonnull); 
 char * archive_scan(zip_t * _Nonnull za , unsigned int archive_status_mode) __algn(struct __unzip_t) ; 
 

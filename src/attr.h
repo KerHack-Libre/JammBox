@@ -37,3 +37,10 @@
 #else 
 # define __ctor  /* NOTHING  */ 
 #endif 
+
+#if __glibc_has_attribute(unused) 
+# define  __unused __attribute__((unused)) 
+#else 
+# define  __unused 
+#endif 
+

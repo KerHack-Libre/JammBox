@@ -110,7 +110,8 @@ int main(int ac , char *const *av)
     }  
     dosimg = strdup(data->_filename);  
     free(data->_filename), data->_filename =0; 
-    free(data) , data =0;  
+    free(data) , data =0; 
+    archive_close(za) ;  
   }
   
 #endif 
