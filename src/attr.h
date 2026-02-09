@@ -26,6 +26,12 @@
 # define __align(type_t) 
 #endif 
 
+#if __glibc_has_attribute(noretrun) 
+# define __nrtrn __attribute__((noretrun)) 
+#else 
+# define __nrtrn 
+#endif 
+
 #if __glibc_has_attribute(constructor) 
 # define __ctor   __attribute((constructor)) 
 #else 

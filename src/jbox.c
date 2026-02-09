@@ -9,9 +9,10 @@
 #include <string.h> 
 #include <assert.h> 
 #include <sys/wait.h> 
-#include <sys/types.h> 
-#include "jboxconfig.h"
+#include <sys/types.h>
+#include <signal.h> 
 
+#include "jboxconfig.h"
 #include "diskcheck.h" 
 #include "dboxutils.h"
 #include "archive.h" 
@@ -35,6 +36,9 @@ FILE *memrecord=(FILE *)00 ;
 extern FILE * memrecord_ptr ; 
 extern char * dbox_emulator ; 
 
+static void sigman(int sigtype) __nrtrn ;  
+static int jbox_sighdl(typeof(void (int)) *sighld_cb, ... ) ; 
+
 static char * jbox_path_resolve(char  const *_Nonnull dosimg);  
 static unsigned int  scan_pte(mbr_t *  _Nonnull) ;    
 static int jbox_launch_dosbox_emulator(const char    * __restrict__  _Nonnull, 
@@ -42,6 +46,7 @@ static int jbox_launch_dosbox_emulator(const char    * __restrict__  _Nonnull,
                                        global_chs_t  * __restrict__  _Nonnull) ; 
 static int jbox_rm_disk_image(const char * __restrict__   _Nonnull) ; 
 static int sanbox_write_log_to(const char  * restrict _Nullable , int ios_redirect) ; 
+
 
 int jbox_create_sandbox(char **_Nonnull stream_memory_dump); 
 
@@ -59,11 +64,13 @@ int main(int ac , char *const *av)
 
   if(!has_dosbox())
   {
-    pstatus^=jbox_goto(1 ,-ENOPKG , "DosBox not found \012") ; 
-  }
+    pstatus^=jbox_goto(1 ,-ENOPKG , "DosBox package not found \012") ; 
+  } 
+  jbox_sighdl(sigman,SIGINT,SIGTERM) ; 
+  
   //!TODO : Refactor this dirty code ... 
   while(1) 
-  {
+  { 
     if(!(ac &~(1))) 
    { 
      
@@ -151,6 +158,40 @@ int main(int ac , char *const *av)
 _eplg: 
   return pstatus ; 
 }
+
+static int jbox_sighdl(typeof(void (int)) *sighld_cb, ... ) 
+{ 
+  unsigned char  max_signal=5;  
+  va_list  ap ; 
+  va_start(ap , max_signal) ; 
+  struct sigaction sa = {.sa_handler =sighld_cb} ; 
+  while(0 < max_signal--) 
+  { 
+    int resgistered_signal = va_arg(ap ,int) ; 
+    if(sigaction(resgistered_signal,&sa ,(void *)00)) 
+      continue;  //!NOTE: more expressif...  
+  }
+
+  va_end(ap) ; 
+  return 0 ; 
+}
+
+static void sigman(int sigtype) 
+{
+  //!TODO: insert here your cleanup routine  
+  switch(sigtype) 
+  { /*NOTE: you can define more signal here */
+    case SIGINT:
+      printf("Keyboard Interrupt\012"); 
+    case SIGTERM: 
+      sleep(1) ; 
+      ui_recover() , tx(clear_screen) ; 
+      exit(1) ; 
+      break ;
+  }
+
+}
+
 
 static char * jbox_path_resolve(char  const * dosimg)  
 {

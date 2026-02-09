@@ -102,9 +102,8 @@ static inline int  highlight_default_item_at(int position  , int target_index , 
 
 static inline int  __restor_shell_default_mode(void) 
 {
-   __configure_term(BACKUP) ; 
-   tx(exit_attribute_mode);  
-   tx(cursor_visible) ;  
+   tx(exit_attribute_mode),  tx(cursor_visible) ; 
+   return __configure_term(BACKUP) ; 
 } 
 
 
@@ -114,5 +113,6 @@ static int ui_menu_interaction(int  hlg ,  int total_items) ;
 
 extern int  ui_init(void) ; 
 extern int  ui_display_menulist(const char ** _Nonnull __item_list , int highlight_npos)  ; 
+extern int  ui_recover(void);  
 
 #endif /* UI */ 
