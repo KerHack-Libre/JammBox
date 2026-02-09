@@ -11,9 +11,15 @@
 #include "dboxutils.h"
 
 
-
 char * dbox_emulator =(char*)00 ;  
 FILE * memrecord_ptr =(FILE *)00; 
+
+//!Retry Scanning to detect eventual newly  added games 
+//+and empty the founded games list 
+static enum  { 
+   DIRSCAN_UNLOCK, 
+   DIRSCAN_LOCK
+} dirscan_status = DIRSCAN_UNLOCK ;  
 
 int dbox_available(void) 
 {
@@ -139,6 +145,7 @@ char **dbox_games(const char * restrict game_path)
   }  
 _skip_data: 
   *(founded_games + idx) =  (void *)0 ; 
+  dirscan_status=DIRSCAN_LOCK ;  
 
   free(list) , list =0 ; 
   free(root_path)  , root_path = 0 ; 
@@ -151,6 +158,12 @@ static  int  __scandepth(const char * rpath ,  const char * dirent, char ** coll
   char *abs_path= 0 ; 
   static int idx=0 ; 
   int filentries = 0 ; 
+   
+  if(DIRSCAN_LOCK & dirscan_status) 
+  {
+    idx=0; 
+    dirscan_status= DIRSCAN_UNLOCK; 
+  }
 
   asprintf(&abs_path, "%s/%s",  rpath , dirent) ; 
   filentries =  scandir(abs_path  ,&list, custom_filter , alphasort); 

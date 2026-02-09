@@ -116,10 +116,14 @@ char * archive_scan(zip_t * za , unsigned  int status_mode)
 static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat , unsigned int permode) 
 {
   
-  unzip_t  * unzip = (unzip_t *) 00 ; 
   zip_file_t * target_file= (zip_file_t *) 00 ; 
   unsigned int fd = ~0 ,  pops = 0 ;  
-  char * path =  (char*)00 ;  
+  char *path =  (char*)00, 
+       *content_buffer=(char*)00 ; 
+
+  unzip_t  * unzip = (unzip_t *) malloc(sizeof(*unzip))  ;  
+  if(!unzip) 
+    return 0; 
 
   target_file = zip_fopen_index(za ,  zip_entry_file_stat->index ,0 ); 
   if(!target_file) 
@@ -156,13 +160,13 @@ static unzip_t * archive_populate(zip_t* za, zip_stat_t *  zip_entry_file_stat ,
   if(__archive_auto_cancel_propagation(zip_entry_file_stat,  pops))
     goto __free_target_file ;
 #endif 
-  
-  char *content_buffer = (char*) malloc(zip_entry_file_stat->size);
+  //TODO : check if the file is not empty  
+
+  content_buffer = (char*) malloc(zip_entry_file_stat->size);
   if (!content_buffer) 
     goto __free_target_file ;
 
-  int64_t ziprb   = zip_fread(target_file , content_buffer , zip_entry_file_stat->size) ;  
-  if(0 >= ziprb) 
+  if(0 >= zip_fread(target_file , content_buffer , zip_entry_file_stat->size))  
   {
     fprintf(stderr , "fail to read content \012") ; 
     goto __free_content_buffer ;  
