@@ -1,82 +1,115 @@
-<img src="assets/logos/freedos.jpg" width=""  height="" alt="freedos" style="margin-right:20px;border-radius:35px"  align="right"/>
-<img src="assets/logos/dosbox-logo.png" width="132"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="left"/>
-<div>
-<div>
-</div>
+<img src="assets/logos/freedos.jpg" width="132"  height="" alt="freedos" style="margin-right:20px;border-radius:35px"  align="right"/>
+<br>
 
- <a href="https://github.com/KerHack-Libre/https://github.com/KerHack-Libre/JammBox/"><img src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor'/></a>
+<img src="assets/logos/jb_emblem.png" width="200"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="left"/>
 
-
----
-
-## Pourquoi  "jàmm"
-
-Parce "jàmm", c’est avant tout : Paix, détente, fun.
+Parce _**jàmm**_, c’est avant tout : **Paix**, **détente** & **fun**.
 Ceci est  une petite invitation à souffler en replongeant dans des jeux simples, directs, addictifs… comme avant.
 
-## Dallal Ak Jàmm 
-Ce dépôt est conçu pour (re)découvrir le charme intemporel des jeux retros DOS classiques, préconfigurés pour tourner directement via DOSBox.
-Que tu sois nostalgique de l’ère MS-DOS ou simplement curieux de l’histoire ludique, ce projet te plonge dans un petit voyage rétro — simple, rapide, et surtout… amusant. 
+JàmmBox célèbre le plaisir brut du rétro‑gaming : pas de surcharge, pas de configuration compliquée  juste lancer un jeu et s’amuser.
+Un esprit _**local, rétro, et accessible à tous...**_
 
-🎯 Objectif du projet
+**Dallal Ak Jàmm**
+Ce dépôt est conçu pour (re)découvrir le charme intemporel des jeux DOS classiques, déjà préconfigurés pour fonctionner directement avec DOSBox.
 
-Offrir une collection de jeux DOS prêts à l’emploi, configurés pour se lancer automatiquement.
-Préserver et partager l’esprit des jeux “à l’ancienne”, accessibles.
-Proposer une expérience.(qui inspireront d'autre currieux a decouvrire  l'informatique).
+</br>
 
-Parfait pour un petit moment de detente et d'amusement a tout ages.
+Que tu sois :
+<img src="assets/logos/dosbox-logo.png" width="132"  height="" alt="dosbox" style="margin-right:20px;border-radius:35px"  align="right"/>
+- nostalgique de l’ère MS‑DOS 🖥️ 
+- curieux de l’histoire du jeu vidéo 🎞️
+- ou simplement à la recherche d’un moment de détente
 
-Une Seul chose pour Jouer convenablement:est d'avoir l'emulateur DosBox disponible. (c'est tout). 
 
+### 🎯 Objectif du projet
+
+- Proposer une collection de jeux DOS prêts à l’emploi
+- Préserver et partager l’esprit des jeux « à l’ancienne »
+- Offrir une expérience simple qui peut aussi inspirer les curieux à découvrir l’informatique
+- Un moment de détente et de fun, pour tous les âges
+
+Une seule condition pour jouer confortablement : avoir DOSBox installé. C’est tout
 
 ### Contenu du depot 
 ```bash 
 /games/ : les jeux DOS configurés
-/src/   : Programme source en C
+/src/   : Programme  code source en C
 /assets/: Les assets 
-  misc/ : divers
-  imgs/ : Images & logos 
-
+ |- misc   : divers
+ |- images : Images des jeux  
+ |- logos  : Logos
+ |- screenshoot: 
 README.md : tu es ici 👋
 ```
-## Comment utiliser  
-la methode la plus simple est de cloner simplement le depot 
-car vous pouvez mettre a joure facilement le depot avec un git pull. 
-pour avoir les derniers jeux. 
 
+### 🚀 Installation & utilisation
+1️⃣ Cloner le dépôt
+La méthode la plus simple est de cloner le dépôt afin de pouvoir le mettre à jour facilement avec git pull.
 
 ```bash 
 git clone <url_du_repo>
 cd Jammbox
+```
+2️⃣ Dépendances requises
 
-avant de compiler assurer d'avoir libzip et curses disponible pour une meilleur experience 
-car ils gerer  le compression et la decompression des jeux et l'affichage du menu. 
+Avant de compiler, assure‑toi d’avoir :
 
+* DOSBox
+* libzip (gestion des archives de jeux)
+* ncurses (interface du menu)
+
+3️⃣ Compilation
+```bash 
 meson setup build 
 meson compile -C build 
 ```
-pour le lancer: 
-faite juste : ./build/Jammbox 
-Puis laisse la magie DOSBox opérer. 
+4️⃣ Lancer JàmmBox
 
-Pour le moment voici la list des jeux disponible 
+```bash
+./build/Jammbox 
+```
+✨ Et laisse la magie de DOSBox opérer.
 
-Jeux disponibles: 
-- Prince of Persia (1990) ✔️
-- Prince of Persia 2 <<The Shadow and the Flame>> 
-- Pacman <<Ms. Pac-Man Maze Madnes>> 
+##### 🕹️ Jeux disponibles 
 
-*Pour le moment le projet est toujours en amelioration continue et d’autres jeux serons bientôt  disponible 
-du genre : classiques d’action, plateforme, puzzle, aventure, etc....*   
+| Jeux |  gameplay |
+|------|-----------|
+|✅ Prince of Persia (1990)|<img src="assets/images/pop/popv1-gameplay.gif" width="100"  height="100" alt="POP-Gameplay" title="POP gameplay" style="margin-right:20px"  align="center"/>
+|✅ Prince of Persia 2 — The Shadow and the Flame|<img src="assets/images/pop/popv2-gameplay.gif" width="100"  height="100" alt="POPv2-Gameplay" title="POPv2 gameplay" style="margin-right:20px"  align="center"/>
+|✅ Ms. Pac‑Man: Maze Madness|<img src="assets/images/pacman/mspacman-gameplay.gif" width="100"  height="100" alt="ms-pacman" title="pacman gameplay" style="margin-right:20px"  align="center"/>
 
-vous pouvez soumettre un pull-request 
-- une idee 
-- un jeux que vous voulez jouer 
-- issue , bug fix , amelioration 
-- ou discuter sur un sujet technique si cela vous interress. 
+🔧 Le projet est en amélioration continue. D’autres jeux arriveront bientôt : action, plateforme, puzzle, aventure, etc.
 
-je suis ouvert a toute recommandation et je reste a l'ecoute. 
+### 🖼️ Aperçu du launcher JàmmBox 
 
+
+|||
+|-|-|
+|ui menu|<img src="assets/screenshoots/ui_menu.png" width="150"  height="150" alt="UI menu" title="ui menu" style="margin-right:20px"  align="center"/>|
+|Booting|<img src="assets/screenshoots/select_and_launch.png" width="150"  height="150" alt="Booting" title="Booting stage" style="margin-right:20px"  align="center"/>|
+|prince of persia | <img src="assets/screenshoots/prince_of_persia.png" width="150"  height="150" alt="POP-Gameplay" title="POP gameplay" style="margin-right:20px"  align="center"/>|
+|pacman | <img src="assets/screenshoots/pacman_gameplay.png" width="150"  height="150" alt="pacman-Gameplay" title="pacman gameplay" style="margin-right:20px"  align="center"/>
+
+### 🧩 Contributions
+
+Les contributions sont les bienvenues 🙌
+Tu peux proposer :
+
+- 💡 une idée
+- 🎮 un jeu à ajouter
+- 🐛 un bug / correctif
+- 🛠️ une amélioration
+- 💬 une discussion  
+
+N’hésite pas à ouvrir une issue ou une pull request. Je reste à l’écoute.
+
+### TODO-List 
+
+- [ ] - Faire Porter Directement Libzip et le ncurses  dans le code source. 
+- [ ] - Ajouter une restriction  pour supporter seulement le systeme de fichier FAT 16 & 32 
+- [ ] - Amelioration continue du User Interface  
+- [ ] - Amelioration de l'archive  pour qu'il contienne en plus de l'image du jeux ansi que le plan de description 
+- [ ] - Faire Porter sur FreeDOS (a definir)
 
 ### Auteur & Mainteneur
 Umar Ba [jUmarB@protonmail.com](jUmarB@protonmail.com) 
