@@ -1,6 +1,6 @@
 #  Build for Jammbox -- 
 project('JammBox', 'c',
-  version : '0.1',
+  version : '1.1',
   default_options : ['c_std=gnu99', 'warning_level=3'])
 
 cc=meson.get_compiler('c') 
@@ -36,7 +36,7 @@ endif
 
 #+ Configuration  
 cfg_data = configuration_data() 
-cfg_data.set('version' , meson.version()) 
+cfg_data.set('version' , meson.project_version()) 
 cfg_data.set('progname', meson.project_name())
 
 configure_file(  
