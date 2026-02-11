@@ -121,3 +121,4 @@ _KerHack-Libre_ — “comprendre, construire, transmettre.”
 _L’ensemble des projets de KërNix sont distribués sous GPLv3,
 en accord avec les 4 libertés fondamentales du logiciel libre_ 
 
+**Made :heart: in Senegal**
