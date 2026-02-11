@@ -107,18 +107,21 @@ N’hésite pas à ouvrir une issue ou une pull request. Je reste à l’écoute
 
 - [ ] - Faire Porter Directement Libzip et le ncurses  dans le code source. 
 - [ ] - Ajouter une restriction  pour supporter seulement le systeme de fichier FAT 16 & 32 
-- [ ] - Amelioration continue du User Interface  
+- [ ] - Amelioration continue du User Interface
 - [ ] - Amelioration de l'archive  pour qu'il contienne en plus de l'image du jeux ansi que le plan de description 
 - [ ] - Faire Porter sur FreeDOS (a definir)
+- [ ] - Mise en place d'un Conteneur pour faciliter l'usage dans un Sandbox (pour les frileux...)
+- [ ] - Diversifier le build (faire un makefile simple pour certains qui n'ont pas le systeme de build meson) 
 
 ### Auteur & Mainteneur
 Umar Ba [jUmarB@protonmail.com](jUmarB@protonmail.com) 
-_KerHack-Libre_ — “comprendre, construire, transmettre.”
-
+_KerHack-Libre_ : “**comprendre**, **construire**, **transmettre**.”
+<img src="assets/logos/made_in_senegal.png" width="200"  height="" alt="made_in_senegal" title="made_in_senegal" style="margin-right:20px;border-radius:35px"  align="right"/></br>
 ### ⚖️ Licence
- <a href="https://github.com/KerHack-Libre/https://github.com/KerHack-Libre/JammBox/"><img align="right" src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor'/></a>
+
 
 _L’ensemble des projets de KërNix sont distribués sous GPLv3,
-en accord avec les 4 libertés fondamentales du logiciel libre_ 
+en accord avec les **4 libertés fondamentales du logiciel libre**_ 
 
-**Made :heart: in Senegal**
+ <a href="https://github.com/KerHack-Libre/https://github.com/KerHack-Libre/JammBox/" align="left"><img  src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor' align="left"/></a>
+
