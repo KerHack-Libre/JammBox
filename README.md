@@ -120,7 +120,7 @@ _KerHack-Libre_ : “**comprendre**, **construire**, **transmettre**.”
 ### ⚖️ Licence
 
 
-_L’ensemble des projets de KërNix sont distribués sous GPLv3,
+_L’ensemble des projets de KërHack-Libre sont distribués sous GPLv3,
 en accord avec les **4 libertés fondamentales du logiciel libre**_ 
 
  <a href="https://github.com/KerHack-Libre/https://github.com/KerHack-Libre/JammBox/" align="left"><img  src ='https://img.shields.io/badge/JammBox-teal?style=for-the-badge&logo=appveyor' align="left"/></a>
